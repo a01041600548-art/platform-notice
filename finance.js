@@ -14,7 +14,7 @@
     if (a >= 10000) return s + (a / 10000).toFixed(a >= 100000 ? 1 : 2).replace(/\.?0+$/, '') + '조';
     if (a >= 100) return s + Math.round(a).toLocaleString('ko-KR') + '억';
     if (a >= 1) return s + a.toFixed(1).replace(/\.0$/, '') + '억';
-    return s + Math.round(m).toLocaleString('ko-KR') + '백만';
+    return s + Math.round(Math.abs(m)).toLocaleString('ko-KR') + '백만';
   };
   const pct = (a, b) => (b ? a / b * 100 : null);
   const chg = (cur, prev) => {
@@ -97,6 +97,17 @@
   .fx-chip span { font-weight: 700; font-size: .95em; }
   .fx-chip small { font-size: .76em; color: var(--fx-muted); white-space: nowrap; }
   .fx-none { font-size: .88em; color: var(--fx-muted); }
+  .fx-rank th:nth-child(2), .fx-rank td:nth-child(2) { text-align: left; white-space: normal; min-width: 9em; }
+  .fx-rank td.rk { text-align: center; font-weight: 800; color: var(--fx-muted); width: 3em; }
+  .fx-rank tr.tot td { font-weight: 800; background: color-mix(in srgb, var(--fx-ink) 6%, var(--fx-card)); }
+  .fx-rank tr.sub td { font-size: .9em; background: color-mix(in srgb, var(--fx-ink) 3%, var(--fx-card)); }
+  .fx-rank tr.sub td:nth-child(2) { padding-left: 2em; }
+  .fx-rank tr.exp { cursor: pointer; }
+  .fx-rank tr.exp td:nth-child(2)::after { content: ' ▾'; color: var(--fx-muted); }
+  .fx-rank tr.exp.open td:nth-child(2)::after { content: ' ▴'; }
+  .fx-share { display: inline-block; height: 8px; border-radius: 4px; background: var(--fx-accent); vertical-align: middle; margin-right: .4em; opacity: .75; }
+  .fx-ctl { display: flex; flex-wrap: wrap; gap: .6em; align-items: center; }
+  .fx-ctl select { font: inherit; font-weight: 700; min-height: 46px; padding: 0 1em; border-radius: 12px; border: 2px solid var(--fx-line); background: var(--fx-card); color: var(--fx-ink); max-width: 100%; }
   .fx-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12em), 1fr)); gap: .6em; }
   .fx-kv div { border: 1.5px solid var(--fx-line); border-radius: 12px; padding: .7em .85em; display: flex; flex-direction: column; gap: .2em; }
   .fx-kv b { font-size: 1.25em; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -127,6 +138,100 @@
     return box;
   }
 
+  // ── 플랫폼 순위·사용료 ──
+  const ppf = (c, y) => v(c, y, 'basicprog') + v(c, y, 'payprog');
+  const MET = [
+    ['subfee', '수신료매출'], ['basicfee', '기본채널 수신료'], ['brev', '방송사업매출'], ['hsfee', '홈쇼핑 송출수수료'],
+    ['pp', 'PP 프로그램사용료 (기본+유료)'], ['basicprog', '기본채널 프로그램사용료'], ['payprog', '유료채널 프로그램사용료'], ['vodprog', 'VOD 프로그램사용료'], ['retranscost', '지상파 재송신비용'],
+    ['r_pp', 'PP 사용료 ÷ 수신료 (%)'], ['r_basic', '기본채널 사용료 ÷ 기본채널 수신료 (%)'],
+  ];
+  const RATIO = { r_pp: ['pp', 'subfee'], r_basic: ['basicprog', 'basicfee'] };
+  const tot = (rows, y, k) => rows.reduce((t, c) => t + (k === 'pp' ? ppf(c, y) : v(c, y, k)), 0);
+  const metric = (rows, y, k) => RATIO[k] ? pct(tot(rows, y, RATIO[k][0]), tot(rows, y, RATIO[k][1])) : tot(rows, y, k);
+  const MSO = { 'LG계열': 'LG헬로비전', 'SKBB계열': 'SK브로드밴드(SO)', '딜라이브계열': '딜라이브', 'CMB계열': 'CMB', 'HCN계열': 'HCN' };
+  const PNAME = { '케이티': 'KT (IPTV)', '에스케이브로드밴드': 'SK브로드밴드 (IPTV)', '엘지유플러스': 'LG유플러스 (IPTV)', '케이티스카이라이프': 'KT스카이라이프 (위성)' };
+  function units(data, mode) {
+    const pl = data.filter((c) => PLAT.includes(c.media));
+    const so = pl.filter((c) => c.media === 'SO');
+    const one = (c) => ({ name: PNAME[c.name] || c.name, kind: c.media === '위성방송' ? '위성' : c.media, rows: [c] });
+    const mso = (g) => ({ name: MSO[g], kind: 'MSO · SO ' + so.filter((c) => c.group === g).length + '곳', rows: so.filter((c) => c.group === g), subs: true });
+    const indiv = so.filter((c) => c.group === '개별 SO').map((c) => ({ name: c.name, kind: '개별 SO', rows: [c] }));
+    const by = (n) => pl.find((c) => c.name === n);
+    if (mode === 'so') return so.map((c) => ({ name: c.name, kind: MSO[c.group] || '개별 SO', rows: [c] }));
+    if (mode === 'grp') return [
+      { name: 'KT 계열', kind: 'IPTV+위성+HCN', rows: [by('케이티'), by('케이티스카이라이프'), ...so.filter((c) => c.group === 'HCN계열')], parts: [one(by('케이티')), one(by('케이티스카이라이프')), mso('HCN계열')] },
+      { name: 'SK 계열', kind: 'IPTV+SO', rows: [by('에스케이브로드밴드'), ...so.filter((c) => c.group === 'SKBB계열')], parts: [one(by('에스케이브로드밴드')), mso('SKBB계열')] },
+      { name: 'LG 계열', kind: 'IPTV+SO', rows: [by('엘지유플러스'), ...so.filter((c) => c.group === 'LG계열')], parts: [one(by('엘지유플러스')), mso('LG계열')] },
+      mso('딜라이브계열'), mso('CMB계열'), ...indiv,
+    ];
+    return [...pl.filter((c) => c.media !== 'SO').map(one), ...Object.keys(MSO).map(mso), ...indiv];
+  }
+  function platforms(data, state, rerender) {
+    const box = el('section', 'fx');
+    const pl = data.filter((c) => PLAT.includes(c.media));
+    // 1) 전체 요약
+    const h1 = el('div', 'fx-h'); h1.append(el('h2', '', '유료방송 전체 수신료와 PP 사용료'), el('span', '', 'IPTV·SO·위성 합계, 2025년 실적 · 전년 대비'));
+    const g = el('div', 'fx-grid');
+    const card = (label, k, note) => {
+      const a = metric(pl, Y, k), b = metric(pl, P, k);
+      const c = el('div', 'fx-card'); const top = el('div', 'fx-row'); top.append(el('span', 'fx-k', label), chg(a, b));
+      c.append(top, el('div', 'fx-big', money(a)), el('span', 'fx-k', '2024년 ' + money(b) + ' · ' + (a >= b ? '+' : '') + money(a - b) + (note ? ' · ' + note : '')));
+      g.append(c);
+    };
+    card('수신료매출', 'subfee'); card('PP 프로그램사용료 (기본+유료)', 'pp'); card('그중 기본채널 사용료', 'basicprog');
+    card('VOD 프로그램사용료', 'vodprog'); card('지상파 재송신비용', 'retranscost'); card('홈쇼핑 송출수수료', 'hsfee');
+    box.append(h1, g);
+    // 2) 매체별
+    const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '매체별 수신료 대비 사용료'), el('span', '', '괄호 안은 전년 대비'));
+    const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table'); const hr = el('tr');
+    ['매체', '수신료매출', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
+    const cell = (a, b) => { const td = el('td', '', money(a)); const sm = el('small'); sm.append(chg(a, b)); td.append(sm); return td; };
+    const rcell = (a, b) => { const td = el('td', '', a == null ? '—' : a.toFixed(1) + '%'); td.append(el('small', 'fx-k', b == null ? '' : '전년 ' + b.toFixed(1) + '% (' + (a - b >= 0 ? '+' : '') + (a - b).toFixed(1) + '%p)')); return td; };
+    [...PLAT.map((m) => [m === '위성방송' ? '위성' : m, pl.filter((c) => c.media === m)]), ['합계', pl]].forEach(([m, rows]) => {
+      const tr = el('tr', m === '합계' ? 'me' : '');
+      tr.append(el('td', '', m), cell(metric(rows, Y, 'subfee'), metric(rows, P, 'subfee')), cell(metric(rows, Y, 'pp'), metric(rows, P, 'pp')), cell(metric(rows, Y, 'vodprog'), metric(rows, P, 'vodprog')), cell(metric(rows, Y, 'retranscost'), metric(rows, P, 'retranscost')), rcell(metric(rows, Y, 'r_pp'), metric(rows, P, 'r_pp')), rcell(metric(rows, Y, 'r_basic'), metric(rows, P, 'r_basic')));
+      tb.append(tr);
+    });
+    t.append(tb); tw.append(t); box.append(h2, tw);
+    // 3) 순위
+    const h3 = el('div', 'fx-h'); h3.append(el('h2', '', '플랫폼 순위'), el('span', '', '항목과 묶음 단위를 고르세요 · MSO·계열 줄을 누르면 구성이 펼쳐집니다'));
+    const ctl = el('div', 'fx-ctl');
+    const ms = el('select'); ms.setAttribute('aria-label', '순위 항목'); MET.forEach(([k, l]) => ms.append(new Option(l, k))); ms.value = state.pm;
+    ms.addEventListener('change', () => { state.pm = ms.value; rerender(); });
+    const seg = el('div', 'fx-seg');
+    [['biz', '사업자별 (MSO 합산)'], ['grp', '계열별'], ['so', 'SO 방송구역별']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.pu === k)); b.addEventListener('click', () => { state.pu = k; state.pexp = {}; rerender(); }); seg.append(b); });
+    ctl.append(ms); box.append(h3, ctl, seg);
+    const k = state.pm, isR = !!RATIO[k];
+    const us = units(data, state.pu).map((u) => ({ ...u, a: metric(u.rows, Y, k), b: metric(u.rows, P, k) }))
+      .filter((u) => u.a != null && (u.a !== 0 || u.b)).sort((x, y) => y.a - x.a);
+    const total = metric(state.pu === 'so' ? pl.filter((c) => c.media === 'SO') : pl, Y, k), totalP = metric(state.pu === 'so' ? pl.filter((c) => c.media === 'SO') : pl, P, k);
+    const maxA = Math.max(...us.map((u) => Math.abs(u.a)), 1);
+    const rw = el('div', 'fx-tablewrap'); const rt = el('table', 'fx-table fx-rank'); const rh = el('tr');
+    ['순위', state.pu === 'so' ? 'SO' : '사업자', '2025년', '2024년', '증감', isR ? '' : '비중'].forEach((x) => rh.append(el('th', '', x)));
+    const rth = el('thead'); rth.append(rh); rt.append(rth); const rb = el('tbody');
+    const fmt = (x) => (x == null ? '—' : isR ? x.toFixed(1) + '%' : money(x));
+    const dif = (a, b) => { if (a == null || b == null) return el('td', '', '—'); if (isR) return el('td', '', (a - b >= 0 ? '▲' : '▼') + Math.abs(a - b).toFixed(1) + '%p'); const td = el('td'); td.append(chg(a, b)); td.append(el('small', 'fx-k', (a - b >= 0 ? '+' : '') + money(a - b))); return td; };
+    const row = (cls, rk, name, kind, a, b) => {
+      const tr = el('tr', cls); tr.append(el('td', 'rk', rk));
+      const nm = el('td'); nm.append(el('div', '', name)); if (kind) nm.append(el('small', 'fx-k', kind)); tr.append(nm);
+      tr.append(el('td', '', fmt(a)), el('td', '', fmt(b)), dif(a, b));
+      const sh = el('td'); if (!isR && total) { const w = Math.max(2, Math.abs(a) / maxA * 60); const bar = el('span', 'fx-share'); bar.style.width = w + 'px'; sh.append(bar, document.createTextNode((a / total * 100).toFixed(1) + '%')); } tr.append(sh);
+      return tr;
+    };
+    rb.append(row('tot', '', state.pu === 'so' ? 'SO 전체' : '유료방송 전체', state.pu === 'so' ? 'SO 90곳' : 'IPTV·SO·위성', total, totalP));
+    us.forEach((u, i) => {
+      const kids = u.parts || (u.subs && state.pu !== 'so' ? u.rows.map((c) => ({ name: c.name, kind: '', rows: [c] })) : null);
+      const tr = row(kids ? 'exp' + (state.pexp[u.name] ? ' open' : '') : '', String(i + 1), u.name, u.kind, u.a, u.b);
+      if (kids) tr.addEventListener('click', () => { state.pexp[u.name] = !state.pexp[u.name]; rerender(); });
+      rb.append(tr);
+      if (kids && state.pexp[u.name]) kids.map((x) => ({ ...x, a: metric(x.rows, Y, k), b: metric(x.rows, P, k) })).sort((x, y) => (y.a || 0) - (x.a || 0)).forEach((x) => rb.append(row('sub', '', x.name, x.kind, x.a, x.b)));
+    });
+    rt.append(rb); rw.append(rt); box.append(rw);
+    box.append(el('p', 'fx-note', 'PP 프로그램사용료 = 기본채널 + 유료채널 프로그램사용료(VOD·지상파 재송신비용 제외). SO는 공표집에 방송구역(법인)별로 나뉘어 있어 MSO별로 더했습니다. 계열별: KT 계열 = KT IPTV + KT스카이라이프 + HCN, SK 계열 = SK브로드밴드 IPTV + SO, LG 계열 = LG유플러스 IPTV + LG헬로비전.'));
+    return box;
+  }
+
   function industry(data, openCo) {
     const box = el('section', 'fx');
     // 매체별 방송사업매출
@@ -144,10 +249,10 @@
     box.append(h1, g);
 
     // 유료방송 플랫폼 수익 구조
-    const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '유료방송 플랫폼의 수신료와 프로그램사용료'), el('span', '', 'PP에게 돌아오는 몫을 보여주는 핵심 지표입니다'));
+    const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '유료방송 플랫폼의 수신료와 PP 사용료'), el('span', '', 'PP 사용료 = 기본+유료채널 프로그램사용료 (VOD·지상파 재송신 제외)'));
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table');
     const hd = el('thead'); const hr = el('tr');
-    ['매체', '수신료매출', '홈쇼핑 송출수수료', '프로그램사용료 지급', '그중 기본채널', '사용료 ÷ 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    ['매체', '수신료매출', '홈쇼핑 송출수수료', 'PP 사용료(기본+유료)', '그중 기본채널', 'PP 사용료 ÷ 수신료'].forEach((x) => hr.append(el('th', '', x)));
     hd.append(hr); t.append(hd);
     const tb = el('tbody');
     const ratios = [];
@@ -155,7 +260,7 @@
       const rows = data.filter((c) => c.media === m);
       const tr = el('tr');
       const sf = sum(rows, Y, 'subfee'), sfp = sum(rows, P, 'subfee');
-      const pf = sum(rows, Y, 'progfee'), pfp = sum(rows, P, 'progfee');
+      const pf = tot(rows, Y, 'pp'), pfp = tot(rows, P, 'pp');
       const hs = sum(rows, Y, 'hsfee'), hsp = sum(rows, P, 'hsfee');
       const bp = sum(rows, Y, 'basicprog'), bpp = sum(rows, P, 'basicprog');
       const cell = (a, b) => { const td = el('td', '', money(a)); const s = el('small'); s.append(chg(a, b)); td.append(s); return td; };
@@ -177,7 +282,7 @@
     const ul = el('ul', 'fx-insight');
     const li = (t) => ul.append(el('li', '', t));
     const r0 = (x) => (x == null ? '—' : x.toFixed(1) + '%');
-    ratios.forEach(([m, r, rp, b]) => li(`${m}는 수신료매출 대비 프로그램사용료를 ${r0(r)} 지급했습니다(전년 ${r0(rp)}). 그중 기본채널 몫은 수신료의 ${r0(b)}입니다.`));
+    ratios.forEach(([m, r, rp, b]) => li(`${m === '위성방송' ? '위성' : m}는 수신료매출 대비 PP 프로그램사용료(기본+유료)를 ${r0(r)} 지급했습니다(전년 ${r0(rp)}). 그중 기본채널 몫은 수신료의 ${r0(b)}입니다.`));
     li(`SO는 홈쇼핑 송출수수료(${money(soHs)})가 수신료매출(${money(soSub)})보다 ${soHs > soSub ? '많아' : '적어'}, 채널 편성에서 홈쇼핑 채널 비중이 계속 중요하게 작동합니다.`);
     li(`PP 전체의 방송프로그램제공매출(플랫폼에서 받은 사용료)은 ${money(ps)}로 전년 대비 ${(((ps - psp) / psp) * 100).toFixed(1)}% 변했습니다.`);
     const me = data.find((c) => c.name === ME);
@@ -217,13 +322,13 @@
       kv.append(box);
     };
     item('매출액', 'rev'); item('방송사업매출', 'brev'); item('영업손익', 'op'); item('당기순손익', 'net');
-    if (PLAT.includes(c.media)) { item('유료방송 수신료매출', 'subfee'); item('홈쇼핑 송출수수료', 'hsfee'); item('프로그램사용료 지급', 'progfee'); item('기본채널 사용료', 'basicprog'); item('유료채널 사용료', 'payprog'); item('VOD 사용료', 'vodprog'); item('재송신 비용', 'retranscost'); }
+    if (PLAT.includes(c.media)) { item('유료방송 수신료매출', 'subfee'); item('홈쇼핑 송출수수료', 'hsfee'); item('방송프로그램사용료 전체(재송신 포함)', 'progfee'); item('기본채널 사용료', 'basicprog'); item('유료채널 사용료', 'payprog'); item('VOD 사용료', 'vodprog'); item('재송신 비용', 'retranscost'); }
     else { item('프로그램제공매출(플랫폼 수입)', 'progsupply'); item('광고매출', 'ad'); item('협찬매출', 'sponsor'); item('프로그램판매', 'progsale'); item('홈쇼핑방송매출', 'hsrev'); item('제작비', 'prodcost'); item('구입비', 'buycost'); item('재송신매출', 'retrans'); }
     item('인건비', 'labor'); item('방송통신발전기금', 'fund'); item('자산총계', 'asset'); item('부채총계', 'debt'); item('자본총계', 'equity');
     d.append(kv);
     const eq = v(c, Y, 'equity'), db = v(c, Y, 'debt');
     const notes = [];
-    if (PLAT.includes(c.media) && v(c, Y, 'subfee')) notes.push(`수신료매출 대비 프로그램사용료 ${pct(v(c, Y, 'progfee'), v(c, Y, 'subfee')).toFixed(1)}% (전년 ${v(c, P, 'subfee') ? pct(v(c, P, 'progfee'), v(c, P, 'subfee')).toFixed(1) + '%' : '—'})`);
+    if (PLAT.includes(c.media) && v(c, Y, 'subfee')) notes.push(`수신료매출 대비 PP 사용료(기본+유료) ${pct(ppf(c, Y), v(c, Y, 'subfee')).toFixed(1)}% (전년 ${v(c, P, 'subfee') ? pct(ppf(c, P), v(c, P, 'subfee')).toFixed(1) + '%' : '—'})`);
     if (v(c, Y, 'brev')) notes.push(`영업이익률 ${(v(c, Y, 'op') / v(c, Y, 'rev') * 100).toFixed(1)}%`);
     if (eq > 0) notes.push(`부채비율 ${(db / eq * 100).toFixed(0)}%`);
     if (notes.length) d.append(el('p', 'fx-note', notes.join(' · ')));
@@ -287,7 +392,7 @@
     const plat = state.media && PLAT.includes(state.media);
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table');
     const hr = el('tr');
-    const cols = plat ? ['회사', '방송사업매출', '수신료매출', '프로그램사용료', '사용료÷수신료', '영업손익'] : ['회사', '방송사업매출', state.media === 'PP' ? '프로그램제공매출' : '광고매출', '영업손익', '당기순손익', '규모'];
+    const cols = plat ? ['회사', '방송사업매출', '수신료매출', 'PP 사용료(기본+유료)', 'PP 사용료÷수신료', '영업손익'] : ['회사', '방송사업매출', state.media === 'PP' ? '프로그램제공매출' : '광고매출', '영업손익', '당기순손익', '규모'];
     cols.forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
@@ -296,8 +401,9 @@
       const name = el('td'); name.append(el('div', '', c.name)); const sm = el('small', 'fx-k', c.media + ' · ' + (c.group || '')); name.append(sm);
       const m = (k) => { const td = el('td', '', money(v(c, Y, k))); if (v(c, Y, k) < 0) td.classList.add('fx-neg'); const s = el('small'); s.append(chg(v(c, Y, k), v(c, P, k))); td.append(s); return td; };
       if (plat) {
-        const r = pct(v(c, Y, 'progfee'), v(c, Y, 'subfee'));
-        tr.append(name, m('brev'), m('subfee'), m('progfee'), el('td', '', r != null ? r.toFixed(1) + '%' : '—'), m('op'));
+        const r = pct(ppf(c, Y), v(c, Y, 'subfee'));
+        const ppt = el('td', '', money(ppf(c, Y))); const pps = el('small'); pps.append(chg(ppf(c, Y), ppf(c, P))); ppt.append(pps);
+        tr.append(name, m('brev'), m('subfee'), ppt, el('td', '', r != null ? r.toFixed(1) + '%' : '—'), m('op'));
       } else {
         tr.append(name, m('brev'), m(state.media === 'PP' ? 'progsupply' : 'ad'), m('op'), m('net'), el('td', '', c.size || ''));
       }
@@ -366,17 +472,17 @@
 
   window.renderFinance = function (root, data) {
     addStyle();
-    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30 });
+    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {} });
     const rerender = () => window.renderFinance(root, data);
     const wrap = el('div', 'fx');
     const seg = el('div', 'fx-seg');
-    [['industry', '업계 요약'], ['corps', '채널법인 현황'], ['company', '업체별 재무 조회']].forEach(([k, label]) => {
+    [['industry', '업계 요약'], ['plat', '플랫폼 순위·사용료'], ['corps', '채널법인 현황'], ['company', '업체별 재무 조회']].forEach(([k, label]) => {
       const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.view === k));
       b.addEventListener('click', () => { state.view = k; rerender(); }); seg.append(b);
     });
     wrap.append(seg);
     const openCo = (c) => { state.view = 'company'; state.media = c.media; state.q = ''; state.open = c.id; rerender(); window.scrollTo({ top: Math.max(0, root.getBoundingClientRect().top + window.scrollY - 80) }); };
-    wrap.append(state.view === 'industry' ? industry(data, openCo) : state.view === 'corps' ? corps(data, state, rerender) : companies(data, state, rerender));
+    wrap.append(state.view === 'industry' ? industry(data, openCo) : state.view === 'corps' ? corps(data, state, rerender) : state.view === 'plat' ? platforms(data, state, rerender) : companies(data, state, rerender));
     wrap.append(el('p', 'fx-note', '자료: 방송미디어통신위원회 「2025년도 방송사업자 재산상황 공표집」(2026.6), 「2025 방송산업 실태조사」 · 재무는 2025년 실적, 전년(2024년) 대비 · 사업자가 제출한 자료로 감사·검증을 거치지 않은 수치이며, 방송 외 사업 실적이 포함될 수 있습니다.'));
     root.replaceChildren(wrap);
   };
