@@ -2,8 +2,8 @@
    window.renderLineup(root, data)
    data = { plats:[{name,kind,vsb,src,basis,date,prods}], chans:[{n,g,corp,c:{platIdx:[no,tier]}}], me:[channel names] } */
 (function () {
-  const GC = { '종교': '#7c3aed', '영화': '#dc2626', '해외드라마': '#db2777', '국내드라마': '#ea580c', '음악': '#c026d3', '스포츠': '#16a34a', '시사·경제': '#0891b2', '교양·생활정보': '#0d9488', '예능·오락': '#d97706', '취미·레저': '#65a30d', '어린이·교육': '#2563eb', '기타': '#64748b', '홈쇼핑': '#a16207', '지상파·종편·보도': '#334155', '공공·기타': '#94a3b8' };
-  const GORDER = ['지상파·종편·보도', '홈쇼핑', '국내드라마', '해외드라마', '예능·오락', '영화', '스포츠', '시사·경제', '교양·생활정보', '어린이·교육', '취미·레저', '음악', '종교', '기타', '공공·기타'];
+  const GC = { '종교': '#7c3aed', '영화': '#dc2626', '해외드라마': '#db2777', '국내드라마': '#ea580c', '음악': '#c026d3', '스포츠': '#16a34a', '시사·경제': '#0891b2', '교양·생활정보': '#0d9488', '예능·오락': '#d97706', '취미·레저': '#65a30d', '어린이·교육': '#2563eb', '기타': '#64748b', '홈쇼핑': '#a16207', '지상파·종편·보도': '#334155', '유료채널': '#9333ea', '평가 외·해외': '#94a3b8' };
+  const GORDER = ['지상파·종편·보도', '홈쇼핑', '국내드라마', '해외드라마', '예능·오락', '영화', '스포츠', '시사·경제', '교양·생활정보', '어린이·교육', '취미·레저', '음악', '종교', '기타', '유료채널', '평가 외·해외'];
   const ME = /JEI|재능/;
   const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const CSS = `
@@ -44,7 +44,7 @@
   .lu-t td.no.t1 { color: #2563eb; } .lu-t td.no.t2 { color: #7c3aed; } .lu-t td.no.t3 { color: #db2777; }
   .lu-t td.na { color: color-mix(in srgb, var(--lu-muted) 55%, transparent); }
   .lu-t tbody tr:hover td { background: color-mix(in srgb, var(--lu-ink) 4%, var(--lu-card)); }
-  .lu-t th.grp { border-left: 2px solid var(--lu-line); }
+  .lu-t th.lu-gl, .lu-t td.lu-gl { border-left: 2px solid var(--lu-line); }
   .lu-leg { display: flex; flex-wrap: wrap; gap: .3em 1em; font-size: .85em; color: var(--lu-muted); }
   .lu-leg b { font-weight: 800; }
   .lu-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr)); gap: .45em; }
@@ -75,7 +75,7 @@
       const card = el('div', 'lu-mecard');
       const h = el('h3', '', '⭐ ' + c.n); card.append(h);
       const nums = el('div', 'lu-nums');
-      D.plats.forEach((p, i) => { const v = c.c[i]; const n = el('div', 'lu-num' + (v ? '' : ' na')); n.append(el('small', '', pname(p)), el('b', '', v ? v[0] + '번' : '미편성')); nums.append(n); });
+      D.plats.forEach((p, i) => { const v = c.c[i]; const n = el('div', 'lu-num' + (v ? '' : ' na')); n.append(el('small', '', pname(p)), el('b', '', v ? v[0] + '번' : '목록에 없음')); nums.append(n); });
       card.append(nums); box.append(card);
     });
     return box;
@@ -113,19 +113,19 @@
     const wrap = el('div', 'lu-wrap'); const t = el('table', 'lu-t');
     const hr = el('tr'); const th0 = el('th', 'ch', '채널'); hr.append(th0);
     let lastKind = '';
-    cols.forEach(({ p }) => { const k = p.vsb ? '8VSB' : p.kind; const th = el('th', k !== lastKind ? 'grp' : ''); th.append(el('span', 'k', k), document.createTextNode(p.name)); hr.append(th); lastKind = k; });
+    cols.forEach(({ p }) => { const k = p.vsb ? '8VSB' : p.kind; const th = el('th', k !== lastKind ? 'lu-gl' : ''); th.append(el('span', 'k', k), document.createTextNode(p.name)); hr.append(th); lastKind = k; });
     const thd = el('thead'); thd.append(hr); t.append(thd);
     const tb = el('tbody');
     rows.slice(0, state.lim).forEach((c) => {
       const tr = el('tr', ME.test(c.n) ? 'me' : '');
       const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
       lastKind = '';
-      cols.forEach(({ p, i }) => { const v = c.c[i]; const k = p.vsb ? '8VSB' : p.kind; const td = el('td', (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na') + (k !== lastKind ? ' grp' : ''), v ? v[0] : '—'); if (v && p.prods && p.prods[v[1]]) td.title = p.prods[v[1]] + '부터'; tr.append(td); lastKind = k; });
+      cols.forEach(({ p, i }) => { const v = c.c[i]; const k = p.vsb ? '8VSB' : p.kind; const td = el('td', (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na') + (k !== lastKind ? ' lu-gl' : ''), v ? v[0] : '—'); if (v && p.prods && p.prods[v[1]]) td.title = p.prods[v[1]] + '부터'; tr.append(td); lastKind = k; });
       tb.append(tr);
     });
     t.append(tb); wrap.append(t); box.append(wrap);
     if (rows.length > state.lim) { const more = el('button', '', `더 보기 (${rows.length - state.lim}개 더)`); more.type = 'button'; more.className = 'lu-more'; more.style.cssText = 'font:inherit;font-weight:800;min-height:46px;border-radius:12px;border:2px solid var(--lu-line);background:var(--lu-card);color:var(--lu-ink);cursor:pointer'; more.addEventListener('click', () => { state.lim += 120; rerender(); }); box.append(more); }
-    const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · — = 미편성 · 색 = 상위 상품에서만 제공'), el('b', '', ''));
+    const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · — = 해당 자료에 없음 · 색 = 상위 상품에서만 제공'), el('b', '', ''));
     [['#2563eb', '2단계 상품'], ['#7c3aed', '3단계 상품'], ['#db2777', '4단계 이상']].forEach(([c, l]) => { const s = el('span', '', '■ ' + l); s.style.color = c; leg.append(s); });
     box.append(leg);
     return box;

@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>플랫폼 공지 모니터링</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <meta name="theme-color" content="#c2410c">
 <meta name="apple-mobile-web-app-title" content="플랫폼 공지">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -141,6 +142,30 @@
   .block-h h3, .block-h b { font-size: 1.15em; }
   .hcard { transition: transform .15s ease; } .hcard:hover { transform: translateY(-2px); }
   .chip[aria-pressed="true"] { background: var(--c0); border-color: var(--c0); color: #fff; }
+
+  /* ── 디자인 시스템 v2 ── */
+  :root { --radius: 16px; --shadow: 0 1px 2px rgba(16,24,40,.05), 0 6px 20px rgba(16,24,40,.06); --brand: #c2410c; --brand2: #ea580c; }
+  body { font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; letter-spacing: -.01em; }
+  .hero { background: linear-gradient(120deg, #1c1917 0%, #292524 45%, #7c2d12 100%); color: #fafaf9; border: 0; border-radius: 24px; padding: 2em 2.1em 1.8em; box-shadow: 0 18px 40px rgba(124,45,18,.25); }
+  .hero::after { content: ''; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(251,146,60,.45), transparent 65%); pointer-events: none; }
+  .hero h1 { font-size: 2.15em; color: #fff; }
+  .hero .eyebrow { color: #fdba74; letter-spacing: .02em; }
+  .hero .lede { color: #e7e5e4; } .hero .lede b { color: #fff; }
+  .hero .btn.ghost { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.35); }
+  .hero .btn.ghost[aria-pressed="true"] { background: #fff; color: #1c1917; }
+  .stat { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); }
+  .stat span { color: #d6d3d1; } .stat b { color: #fff; font-size: 1.55em; }
+  .tabs { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(10px); border-radius: 18px; box-shadow: var(--shadow); }
+  .tab { border-radius: 12px; }
+  .tile, .hcard, .block, .search, .mcard, .site { border-width: 1.5px; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .sec > div:first-child { display: flex; flex-direction: column; gap: .15em; }
+  .sec > div:first-child > h2 { font-size: 1.45em; letter-spacing: -.02em; }
+  details.basis { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: .8em 1.1em; box-shadow: var(--shadow); }
+  details.basis summary { cursor: pointer; font-weight: 800; color: var(--ink); }
+  details.basis ul { margin: .7em 0 .2em; padding-left: 1.2em; display: flex; flex-direction: column; gap: .35em; color: var(--ink2); font-size: .95em; }
+  details.basis b { color: var(--ink); }
+  #lineupTab { --lu-bg: var(--bg); --lu-card: var(--card); --lu-ink: var(--ink); --lu-muted: var(--ink2); --lu-line: var(--line); --lu-accent: var(--c0); }
+  @media (max-width: 720px) { .hero { padding: 1.4em 1.2em; border-radius: 18px; } .hero h1 { font-size: 1.6em; } .stat b { font-size: 1.25em; } }
   @media (max-width: 720px) {
     body { font-size: 15px; line-height: 1.6; }
     body.big { font-size: 17.5px; }
@@ -204,7 +229,8 @@
     <button class="tab" role="tab" data-tab="monthly" aria-selected="false">월간 누적</button>
     <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false">대상 사이트</button>
     <button class="tab" role="tab" data-tab="newsTab" aria-selected="false">언론보도</button>
-    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산·채널</button>
+    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산·채널법인</button>
+    <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false">채널 라인업</button>
   </nav>
 
   <section class="pane" id="recent">
@@ -234,10 +260,21 @@
 
   <section class="pane off" id="financeTab"><section class="sec"><div><h2>재산상황 · 채널법인</h2><span class="muted">재산상황 공표집 · 방송산업 실태조사 · 채널평가 장르 분류</span></div><div id="finance"><p class="muted">불러오는 중…</p></div></section></section>
 
+  <section class="pane off" id="lineupTab"><section class="sec"><div><h2>플랫폼 채널 라인업</h2><span class="muted">IPTV·위성·케이블 채널번호 비교 · 채널평가 장르별 보기</span></div>
+    <details class="basis"><summary>자료 기준 보기</summary><ul>
+      <li><b>이용약관 기준</b> — SK브로드밴드 IPTV(2026.10.19 약관 [별표4]), KT스카이라이프(2026.10.22 약관 <별표6>), CMB(2026.7.1 약관, 동대전방송), SK브로드밴드 케이블 8VSB(2026.7.22 약관, 강서방송)</li>
+      <li><b>홈페이지 기준</b> — KT 지니 TV 채널안내(전체 채널, 확인일 표시)</li>
+      <li><b>준비 중</b> — LG유플러스·LG헬로비전·HCN·딜라이브·개별 SO 9곳 (회사 PC에서 자료 저장 후 추가)</li>
+      <li>케이블은 방송구역마다 번호가 달라 표시한 구역 기준입니다. 색으로 표시된 번호는 상위 상품부터 나오는 채널입니다.</li>
+      <li>장르는 2024 채널평가 채널군 분류(18개 유료방송사, 다수 기준)를 따르며, 평가 대상이 아닌 지상파·종편·보도·홈쇼핑·해외채널은 따로 묶었습니다.</li>
+    </ul></details>
+    <div id="lineup"><p class="muted">불러오는 중…</p></div></section></section>
+
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
 </div>
 
 <script src="finance.js"></script>
+<script src="lineup.js"></script>
 <script>
 (() => {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {}); }
@@ -260,7 +297,12 @@
   const store = { get: () => { try { return localStorage.getItem(STORE); } catch (e) { return null; } }, set: (v) => { try { localStorage.setItem(STORE, v); } catch (e) {} }, del: () => { try { localStorage.removeItem(STORE); } catch (e) {} } };
 
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-  let PW = null, FIN = null;
+  let PW = null, FIN = null, LU = null;
+  async function loadLineup() {
+    if (LU || !PW) return;
+    try { LU = await decrypt(PW, 'lineup.enc.json'); window.renderLineup($('lineup'), LU); }
+    catch (e) { $('lineup').replaceChildren(el('p', 'muted', '라인업 자료를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.')); }
+  }
   async function loadFinance() {
     if (FIN || !PW) return;
     try { FIN = await decrypt(PW, 'finance.enc.json'); window.renderFinance($('finance'), FIN); }
@@ -410,6 +452,7 @@
     document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
     document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('off', p.id !== b.dataset.tab));
     if (b.dataset.tab === 'financeTab') loadFinance();
+    if (b.dataset.tab === 'lineupTab') loadLineup();
     window.scrollTo({ top: 0 });
   }));
   $('bigBtn').addEventListener('click', () => { const on = !document.body.classList.contains('big'); document.body.classList.toggle('big', on); $('bigBtn').setAttribute('aria-pressed', String(on)); });
