@@ -72,6 +72,18 @@
   .fx-tags { display: flex; gap: .4em; flex-wrap: wrap; margin-top: .4em; }
   .fx-tag { font-size: .85em; font-weight: 800; padding: .1em .7em; border-radius: 999px; border: 1.5px solid var(--fx-line); color: var(--fx-muted); }
   .fx-close { font: inherit; font-weight: 800; min-height: 42px; padding: 0 1em; border-radius: 10px; border: 2px solid var(--fx-line); background: var(--fx-bg); color: var(--fx-ink); cursor: pointer; }
+  .fx-sub { margin: .2em 0 0; font-size: 1.1em; font-weight: 800; }
+  .fx-chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17em), 1fr)); gap: .6em; }
+  .fx-ch { border: 1.5px solid var(--fx-line); border-radius: 12px; padding: .75em .9em; display: flex; flex-direction: column; gap: .45em; }
+  .fx-ch b { font-size: 1.08em; }
+  .fx-pills { display: flex; flex-wrap: wrap; gap: .3em; }
+  .fx-pill { font-size: .82em; padding: .15em .55em; border-radius: 999px; border: 1.5px solid var(--fx-line); white-space: nowrap; }
+  .fx-pill.on { border-color: var(--fx-ink); font-weight: 700; }
+  .fx-pill.off { opacity: .45; text-decoration: line-through; }
+  .fx-mix { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--fx-line); }
+  .fx-mix i { display: block; height: 100%; margin: 0; padding: 0; border: 0; min-width: 0; }
+  .fx-leg { display: flex; flex-wrap: wrap; gap: .2em .8em; font-size: .82em; color: var(--fx-muted); }
+  .fx-leg span::before { content: ''; display: inline-block; width: .7em; height: .7em; border-radius: 2px; margin-right: .3em; background: var(--c); vertical-align: -.05em; }
   .fx-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12em), 1fr)); gap: .6em; }
   .fx-kv div { border: 1.5px solid var(--fx-line); border-radius: 12px; padding: .7em .85em; display: flex; flex-direction: column; gap: .2em; }
   .fx-kv b { font-size: 1.25em; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -203,14 +215,48 @@
     if (eq > 0) notes.push(`부채비율 ${(db / eq * 100).toFixed(0)}%`);
     if (notes.length) d.append(el('p', 'fx-note', notes.join(' · ')));
     if (c.media === 'IPTV') d.append(el('p', 'fx-note', '※ IPTV 3사의 영업손익·자산 등은 통신 등 방송 외 사업이 포함된 회사 전체 수치입니다.'));
+    if (c.mpp || c.emp) {
+      d.append(el('h4', 'fx-sub', '회사 정보'));
+      const ik = el('div', 'fx-kv');
+      const box = (k, val, sub) => { const b = el('div'); b.append(el('span', 'fx-k', k), el('b', '', val)); if (sub) b.append(el('small', '', sub)); ik.append(b); };
+      if (c.mpp) box('소속 그룹 (MPP)', c.mpp.g, 'PP 방송사업매출 점유율 ' + c.mpp.sh + '%' + (c.mpp.with.length ? ' · 계열 ' + c.mpp.with.join(', ') : ''));
+      if (c.ch) box('운영 채널 수', c.ch.filter((x) => x.tx || x.prem != null).length + '개', c.ch.filter((x) => x.tx || x.prem != null).map((x) => x.n).join(', '));
+      if (c.emp) { const e = c.emp; box('종사자', e[12] + '명', `방송직 ${e[3] + e[4] + e[5] + e[6] + e[7]} · 경영 ${e[2]} · 기술 ${e[8]} · 영업/홍보 ${e[10]}`); }
+      d.append(ik);
+    }
+    const chs = (c.ch || []).filter((x) => x.tx || x.prem != null || x.src);
+    if (chs.length) {
+      d.append(el('h4', 'fx-sub', '보유 채널'));
+      const COL = ['#c2410c', '#2563eb', '#16a34a', '#a855f7'], SN = ['자체제작', '외주제작', '국내구매', '국외구매'];
+      const leg = el('div', 'fx-leg'); SN.forEach((t, i) => { const sp = el('span', '', t); sp.style.setProperty('--c', COL[i]); leg.append(sp); });
+      const grid = el('div', 'fx-chs');
+      chs.forEach((x) => {
+        const card = el('div', 'fx-ch'); card.append(el('b', '', x.n));
+        if (x.tx) {
+          const pl = el('div', 'fx-pills');
+          [['SO', x.tx[0], '/90'], ['위성', x.tx[1], ''], ['IPTV', x.tx[3], '/3'], ['DMB', x.tx[2], '']].forEach(([k, n, of]) => {
+            if (k === 'DMB' && !n) return;
+            pl.append(el('span', 'fx-pill ' + (n ? 'on' : 'off'), k === '위성' ? '위성 ' + (n ? 'O' : 'X') : k + ' ' + n + of));
+          });
+          card.append(pl);
+        }
+        if (x.prem != null) card.append(el('small', 'fx-k', '본방송 비율 ' + x.prem.toFixed(1) + '%'));
+        if (x.src && x.src.some((v) => v)) {
+          const bar = el('div', 'fx-mix'); x.src.forEach((v, i) => { if (v) { const s2 = el('i'); s2.style.flex = v + ' 0 0'; s2.style.margin = '0'; s2.style.background = COL[i]; s2.title = SN[i] + ' ' + v + '%'; bar.append(s2); } });
+          card.append(bar, el('small', 'fx-k', x.src.map((v, i) => v ? SN[i] + ' ' + v.toFixed(0) + '%' : '').filter(Boolean).join(' · ')));
+        }
+        grid.append(card);
+      });
+      d.append(grid, leg, el('p', 'fx-note', 'SO 송출은 전체 90개 SO 중 송출 SO 수, IPTV는 3사 중 송출사 수입니다. 2025 방송산업 실태조사(2024년 기준).'));
+    }
     return d;
   }
 
   function companies(data, state, rerender) {
     const box = el('section', 'fx');
-    const h = el('div', 'fx-h'); h.append(el('h2', '', '업체별 재산상황'), el('span', '', '회사 이름으로 찾거나 매체를 고른 뒤, 줄을 누르면 상세가 열립니다'));
+    const h = el('div', 'fx-h'); h.append(el('h2', '', '업체별 재산상황'), el('span', '', '회사·채널 이름으로 찾거나 매체를 고른 뒤, 줄을 누르면 상세(재무·보유 채널)가 열립니다'));
     const sb = el('div', 'fx-search');
-    const inp = el('input'); inp.type = 'search'; inp.placeholder = '회사 이름 (예: 딜라이브, 재능방송, CJ)'; inp.value = state.q; inp.setAttribute('aria-label', '회사 검색');
+    const inp = el('input'); inp.type = 'search'; inp.placeholder = '회사·채널·그룹 이름 (예: 재능방송, tvN, 중앙홀딩스)'; inp.value = state.q; inp.setAttribute('aria-label', '회사 검색');
     const sel = el('select'); sel.setAttribute('aria-label', '매체'); ['전체', ...MEDIA, '지상파DMB'].forEach((m) => sel.append(new Option(m === '전체' ? '전체 매체' : m, m === '전체' ? '' : m))); sel.value = state.media;
     const go = () => { state.q = inp.value.trim(); state.media = sel.value; state.open = null; rerender(); };
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
@@ -223,7 +269,7 @@
     const open = data.find((c) => c.id === state.open);
     if (open) box.append(detail(open, () => { state.open = null; rerender(); }));
     const q = state.q.toLowerCase();
-    const rows = data.filter((c) => (!state.media || c.media === state.media) && (!q || (c.full + c.name + c.group + c.sub).toLowerCase().includes(q)))
+    const rows = data.filter((c) => (!state.media || c.media === state.media) && (!q || (c.full + c.name + c.group + c.sub + (c.mpp ? c.mpp.g : '') + (c.ch || []).map((x) => x.n).join(' ')).toLowerCase().includes(q)))
       .sort((a, b) => v(b, Y, 'brev') - v(a, Y, 'brev'));
     const plat = state.media && PLAT.includes(state.media);
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table');
