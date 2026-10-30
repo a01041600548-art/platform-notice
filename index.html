@@ -83,8 +83,8 @@
 
   .block { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: .3em 1.3em; scroll-margin-top: 100px; }
   .block-h { display: flex; flex-wrap: wrap; gap: .6em; align-items: center; padding: 1em 0 .8em; border-bottom: 2px solid var(--line); }
-  .item { display: grid; grid-template-columns: 11em minmax(0, 1fr); column-gap: 1.5em; row-gap: .35em; padding: 1.1em 0; border-bottom: 1px solid var(--line); grid-template-areas: "plat title" "date sum" "date chk"; }
-  .item.wt { grid-template-areas: "topic title" "plat sum" "date chk"; }
+  .item { display: grid; grid-template-columns: 11em minmax(0, 1fr); column-gap: 1.5em; row-gap: .35em; padding: 1.1em 0; border-bottom: 1px solid var(--line); grid-template-areas: "plat title" "date sum" "date chk" "date act"; }
+  .item.wt { grid-template-areas: "topic title" "plat sum" "date chk" "date act"; }
   .item:last-child { border-bottom: 0; }
   .c-topic { grid-area: topic; } .c-plat { grid-area: plat; font-weight: 800; } .c-date { grid-area: date; color: var(--ink2); font-weight: 700; }
   .c-title { grid-area: title; font-size: 1.08em; font-weight: 800; line-height: 1.5; } .c-sum { grid-area: sum; color: var(--ink2); } .c-chk { grid-area: chk; font-weight: 700; }
@@ -114,6 +114,21 @@
   .install { min-height: 52px; padding: 0 1.2em; border-radius: 12px; border: 2px solid var(--c0); background: color-mix(in srgb, var(--c0) 10%, var(--card)); color: var(--ink); font-weight: 800; cursor: pointer; }
   .howto { margin: 0; font-size: .92em; color: var(--ink2); line-height: 1.6; }
   .howto b { color: var(--ink); }
+  body { background: radial-gradient(1200px 500px at 10% -10%, color-mix(in srgb, var(--c0) 10%, transparent), transparent 60%), var(--bg); background-attachment: fixed; }
+  .hero { position: relative; overflow: hidden; background: linear-gradient(135deg, color-mix(in srgb, var(--c0) 16%, var(--card)) 0%, var(--card) 55%, color-mix(in srgb, var(--c2) 10%, var(--card)) 100%); border: 1.5px solid var(--line); border-radius: 22px; padding: 1.6em 1.7em; display: flex; flex-direction: column; gap: .7em; box-shadow: 0 6px 24px rgba(0,0,0,.06); }
+  .hero h1 { letter-spacing: -.02em; }
+  .stats { display: flex; flex-wrap: wrap; gap: .6em; margin-top: .3em; }
+  .stat { background: color-mix(in srgb, var(--card) 85%, transparent); border: 1.5px solid var(--line); border-radius: 14px; padding: .55em .95em; display: flex; flex-direction: column; min-width: 7.5em; }
+  .stat span { font-size: .82em; font-weight: 700; color: var(--ink2); }
+  .stat b { font-size: 1.35em; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .tile, .hcard, .block, .search, .mcard, .site { box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 14px rgba(0,0,0,.03); }
+  .tile { transition: transform .15s ease, border-color .15s ease; } .tile:hover { transform: translateY(-2px); }
+  .go { display: inline-flex; align-items: center; gap: .35em; margin-top: .35em; font-size: .9em; font-weight: 800; text-decoration: none; padding: .35em .9em; border-radius: 999px; border: 2px solid var(--ink); color: var(--ink); background: var(--card); width: fit-content; }
+  .go:hover { background: var(--ink); color: var(--bg); }
+  .go.list { border-color: var(--line); color: var(--ink2); font-weight: 700; }
+  .go.list:hover { background: var(--ink2); color: var(--bg); border-color: var(--ink2); }
+  .c-act { grid-area: act; }
+  #financeTab { --fx-bg: var(--bg); --fx-card: var(--card); --fx-ink: var(--ink); --fx-muted: var(--ink2); --fx-line: var(--line); --fx-up: var(--ok); --fx-down: var(--bad); --fx-accent: var(--c0); --fx-c2: var(--c2); }
   .foot { color: var(--ink2); font-size: .95em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; border-top: 1px solid var(--line); padding-top: 1.2em; }
 
   @media (max-width: 720px) {
@@ -122,6 +137,7 @@
     .wrap { gap: 1.5em; padding: 14px 14px 48px; }
     h1 { font-size: 1.5em; } h2 { font-size: 1.15em; } h3 { font-size: 1.08em; }
     .lede { font-size: 1em; }
+    .hero { padding: 1.1em 1.1em; border-radius: 16px; gap: .5em; } .stat { min-width: 0; flex: 1 1 30%; padding: .45em .65em; } .stat b { font-size: 1.15em; }
     .btn { min-height: 44px; padding: 0 1em; }
     .top .btn { min-height: 38px; font-size: .9em; padding: 0 .8em; }
     .tabs { flex-wrap: nowrap; overflow-x: auto; position: sticky; top: 0; border-radius: 0 0 14px 14px; margin: 0 -14px; padding: .4em 14px; scrollbar-width: none; }
@@ -141,7 +157,7 @@
     .chip { min-height: 38px; padding: 0 .85em; font-size: .92em; }
     .block { padding: .2em 1em; border-width: 1.5px; border-radius: 12px; }
     .block-h { padding: .8em 0 .6em; }
-    .item, .item.wt { grid-template-columns: 1fr; grid-template-areas: "topic" "plat" "title" "sum" "chk" "date"; row-gap: .25em; padding: .85em 0; }
+    .item, .item.wt { grid-template-columns: 1fr; grid-template-areas: "topic" "plat" "title" "sum" "chk" "act" "date"; row-gap: .25em; padding: .85em 0; }
     .c-plat { font-size: .92em; } .c-date { font-size: .88em; }
     .c-title { font-size: 1em; } .c-sum, .c-chk { font-size: .93em; }
     .badge { font-size: .85em; padding: .1em .65em; }
@@ -166,10 +182,11 @@
 </div>
 
 <div class="wrap off" id="app">
-  <header>
+  <header class="hero">
     <div class="top"><span class="eyebrow">재능방송 플랫폼사업팀 · 플랫폼영업 보조</span><button type="button" class="btn ghost" id="bigBtn" aria-pressed="false">가+ 글자 크게</button></div>
     <h1>플랫폼 공지 모니터링</h1>
     <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회 19곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 갱신됩니다.</p>
+    <div class="stats"><div class="stat"><span>최근 1달 공지</span><b id="sTotal">—</b></div><div class="stat"><span>핵심 이슈</span><b id="sKey">—</b></div><div class="stat"><span>업계 기사</span><b id="sNews">—</b></div></div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -177,6 +194,7 @@
     <button class="tab" role="tab" data-tab="monthly" aria-selected="false">월간 누적</button>
     <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false">대상 사이트</button>
     <button class="tab" role="tab" data-tab="newsTab" aria-selected="false">언론보도</button>
+    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산상황</button>
   </nav>
 
   <section class="pane" id="recent">
@@ -204,9 +222,12 @@
     <div class="chips" id="cats"></div><div class="block"><div id="newsList"></div></div>
     <p class="muted" style="margin:0">요약은 기사 내용을 짧게 다시 정리한 것입니다. 정확한 내용은 원문 기사에서 확인하세요.</p></section></section>
 
+  <section class="pane off" id="financeTab"><section class="sec"><div><h2>방송사업자 재산상황</h2><span class="muted">2025년도 재산상황 공표집 기준 · 업계 요약과 업체별 재무</span></div><div id="finance"><p class="muted">불러오는 중…</p></div></section></section>
+
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
 </div>
 
+<script src="finance.js"></script>
 <script>
 (() => {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {}); }
@@ -229,8 +250,14 @@
   const store = { get: () => { try { return localStorage.getItem(STORE); } catch (e) { return null; } }, set: (v) => { try { localStorage.setItem(STORE, v); } catch (e) {} }, del: () => { try { localStorage.removeItem(STORE); } catch (e) {} } };
 
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-  async function decrypt(pw) {
-    const res = await fetch('data.enc.json?t=' + Date.now(), { cache: 'no-store' });
+  let PW = null, FIN = null;
+  async function loadFinance() {
+    if (FIN || !PW) return;
+    try { FIN = await decrypt(PW, 'finance.enc.json'); window.renderFinance($('finance'), FIN); }
+    catch (e) { $('finance').replaceChildren(el('p', 'muted', '재산상황 자료를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.')); }
+  }
+  async function decrypt(pw, file) {
+    const res = await fetch((file || 'data.enc.json') + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) throw new Error('load');
     const enc = await res.json();
     const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
@@ -244,6 +271,7 @@
     $('err').textContent = silent ? '' : '확인 중입니다…';
     try {
       D = await decrypt(pw);
+      PW = pw;
       store.set(pw);
       $('lock').classList.add('off'); $('app').classList.remove('off');
       render();
@@ -260,17 +288,31 @@
     const d = el('div', 'item' + (topicCell ? ' wt' : ''));
     if (topicCell) { const c = el('div', 'c-topic'); c.append(topicCell); d.append(c); }
     const p = el('div', 'c-plat'); if (fields.group) p.append(el('span', 'grp', fields.group)); p.append(fields.plat);
-    const t = el('div', 'c-title'); t.append(link(r.url, r.title));
-    d.append(p, el('div', 'c-date', fmt(r.date)), t, el('div', 'c-sum', fields.sum), el('div', 'c-chk', fields.chk));
+    const t = el('div', 'c-title', r.title);
+    const act = el('div', 'c-act'); act.append(goBtn(r.url, fields.kind));
+    d.append(p, el('div', 'c-date', fmt(r.date)), t, el('div', 'c-sum', fields.sum), el('div', 'c-chk', fields.chk), act);
     return d;
   }
-  const nItem = (r, wt) => item(r, wt ? badge(r.topic, tcol(r.topic)) : null, { group: r.group, plat: r.platform, sum: r.summary, chk: r.check });
+  let LISTS = new Set();
+  function goBtn(u, kind) {
+    if (typeof u !== 'string' || !/^https:\/\//.test(u)) return document.createTextNode('');
+    const isList = kind !== 'news' && LISTS.has(u);
+    const a = el('a', 'go' + (isList ? ' list' : ''), kind === 'news' ? '기사 원문 보기 ↗' : (isList ? '공지 목록에서 찾기 ↗' : '공지 원문 보기 ↗'));
+    a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    if (isList) a.title = '이 사이트는 공지마다 주소가 따로 없어 목록 화면으로 연결됩니다. 목록에서 같은 제목을 눌러 주세요.';
+    return a;
+  }
+  const nItem = (r, wt) => item(r, wt ? badge(r.topic, tcol(r.topic)) : null, { group: r.group, plat: r.platform, sum: r.summary, chk: r.check, kind: 'notice' });
 
   function render() {
     const cut = cutoff();
     const recent = D.notices.filter((r) => r.date >= cut);
     $('range').textContent = fmt(cut) + ' ~ ' + fmt(today());
     $('total').textContent = recent.length;
+    LISTS = new Set(D.sites.map((s) => s.url));
+    $('sTotal').textContent = recent.length + '건';
+    $('sKey').textContent = recent.filter((r) => KEY.includes(r.topic)).length + '건';
+    $('sNews').textContent = D.news.length + '건';
     $('updated').textContent = D.updated;
 
     $('tiles').replaceChildren(...TOPICS.map((t, i) => {
@@ -285,8 +327,8 @@
     $('hl').replaceChildren(...recent.filter((r) => KEY.includes(r.topic)).sort(byDate).slice(0, 4).map((r) => {
       const c = el('article', 'hcard'); c.style.borderTopColor = tcol(r.topic);
       const m = el('div', 'meta'); m.append(badge(r.topic, tcol(r.topic)), r.platform + ' · ' + fmt(r.date));
-      const t = el('div', 'htitle'); t.append(link(r.url, r.title));
-      c.append(m, t, el('div', 'muted', r.summary), el('div', 'chk', r.check));
+      const t = el('div', 'htitle', r.title);
+      c.append(m, t, el('div', 'muted', r.summary), el('div', 'chk', r.check), goBtn(r.url, 'notice'));
       return c;
     }));
 
@@ -330,7 +372,7 @@
     let cat = '';
     const drawNews = () => {
       const rows = D.news.filter((r) => !cat || r.category === cat).sort(byDate);
-      $('newsList').replaceChildren(...(rows.length ? rows.map((r) => item(r, badge(r.category, ccol(r.category)), { plat: r.outlet, sum: r.summary, chk: r.point })) : [el('p', 'empty', '이 분야의 최근 기사가 아직 없습니다.')]));
+      $('newsList').replaceChildren(...(rows.length ? rows.map((r) => item(r, badge(r.category, ccol(r.category)), { plat: r.outlet, sum: r.summary, chk: r.point, kind: 'news' })) : [el('p', 'empty', '이 분야의 최근 기사가 아직 없습니다.')]));
       document.querySelectorAll('#cats .chip').forEach((c) => c.setAttribute('aria-pressed', String((c.dataset.cat || '') === cat)));
     };
     $('cats').replaceChildren(...['', ...CATS].map((c) => { const b = el('button', 'chip', (c || '전체') + ' '); b.dataset.cat = c; b.append(el('b', '', String(D.news.filter((r) => !c || r.category === c).length))); b.addEventListener('click', () => { cat = c; drawNews(); }); return b; }));
@@ -357,6 +399,7 @@
   document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
     document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('off', p.id !== b.dataset.tab));
+    if (b.dataset.tab === 'financeTab') loadFinance();
     window.scrollTo({ top: 0 });
   }));
   $('bigBtn').addEventListener('click', () => { const on = !document.body.classList.contains('big'); document.body.classList.toggle('big', on); $('bigBtn').setAttribute('aria-pressed', String(on)); });
