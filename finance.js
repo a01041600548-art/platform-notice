@@ -84,6 +84,19 @@
   .fx-mix i { display: block; height: 100%; margin: 0; padding: 0; border: 0; min-width: 0; }
   .fx-leg { display: flex; flex-wrap: wrap; gap: .2em .8em; font-size: .82em; color: var(--fx-muted); }
   .fx-leg span::before { content: ''; display: inline-block; width: .7em; height: .7em; border-radius: 2px; margin-right: .3em; background: var(--c); vertical-align: -.05em; }
+  .fx-corps { display: flex; flex-direction: column; gap: .7em; }
+  .fx-corp { background: var(--fx-card); border: 1.5px solid var(--fx-line); border-radius: 16px; padding: 1em 1.15em; display: flex; flex-direction: column; gap: .6em; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .fx-corp:hover { border-color: var(--fx-ink); }
+  .fx-corp.me { border: 2px solid var(--fx-accent); }
+  .fx-corp-top { display: flex; justify-content: space-between; align-items: baseline; gap: .4em 1em; flex-wrap: wrap; }
+  .fx-corp-top b { font-size: 1.15em; font-weight: 800; }
+  .fx-corp-top .fx-rev { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fx-corp-meta { font-size: .88em; color: var(--fx-muted); }
+  .fx-chips { display: flex; flex-wrap: wrap; gap: .4em; }
+  .fx-chip { border: 1.5px solid var(--fx-line); border-radius: 10px; padding: .3em .6em; display: inline-flex; flex-direction: column; gap: .05em; background: var(--fx-bg); }
+  .fx-chip span { font-weight: 700; font-size: .95em; }
+  .fx-chip small { font-size: .76em; color: var(--fx-muted); white-space: nowrap; }
+  .fx-none { font-size: .88em; color: var(--fx-muted); }
   .fx-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12em), 1fr)); gap: .6em; }
   .fx-kv div { border: 1.5px solid var(--fx-line); border-radius: 12px; padding: .7em .85em; display: flex; flex-direction: column; gap: .2em; }
   .fx-kv b { font-size: 1.25em; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -220,8 +233,8 @@
       const ik = el('div', 'fx-kv');
       const box = (k, val, sub) => { const b = el('div'); b.append(el('span', 'fx-k', k), el('b', '', val)); if (sub) b.append(el('small', '', sub)); ik.append(b); };
       if (c.mpp) box('소속 그룹 (MPP)', c.mpp.g, 'PP 방송사업매출 점유율 ' + c.mpp.sh + '%' + (c.mpp.with.length ? ' · 계열 ' + c.mpp.with.join(', ') : ''));
-      if (c.ch) box('운영 채널 수', c.ch.filter((x) => x.tx || x.prem != null).length + '개', c.ch.filter((x) => x.tx || x.prem != null).map((x) => x.n).join(', '));
-      if (c.emp) { const e = c.emp; box('종사자', e[12] + '명', `방송직 ${e[3] + e[4] + e[5] + e[6] + e[7]} · 경영 ${e[2]} · 기술 ${e[8]} · 영업/홍보 ${e[10]}`); }
+      if (c.ch) box('운영 채널 수', c.ch.length + '개', c.ch.map((x) => x.n).join(', '));
+      if (c.emp) { const e = c.emp; box('종사자', e[12].toLocaleString('ko-KR') + '명', c.group === '홈쇼핑' ? '' : `방송직 ${e[3] + e[4] + e[5] + e[6] + e[7]} · 경영 ${e[2]} · 기술 ${e[8]} · 영업/홍보 ${e[10]}`); }
       d.append(ik);
     }
     const chs = (c.ch || []).filter((x) => x.tx || x.prem != null || x.src);
@@ -302,20 +315,69 @@
     return box;
   }
 
+  const GRP = [['', '전체'], ['종합편성', '종합편성'], ['보도전문', '보도전문'], ['계열', '지상파·통신 계열'], ['개별PP', '개별PP'], ['홈쇼핑', '홈쇼핑']];
+  const txText = (x) => { if (!x.tx) return x.mo ? '송출 자료 없음' : ''; const t = x.tx, a = []; a.push('SO ' + t[0]); if (t[1]) a.push('위성'); a.push('IPTV ' + t[3]); if (t[2]) a.push('DMB'); return a.join(' · '); };
+  function corps(data, state, rerender) {
+    const box = el('section', 'fx');
+    const all = data.filter((c) => c.media === 'PP');
+    const h = el('div', 'fx-h');
+    h.append(el('h2', '', '채널법인 현황'), el('span', '', `채널사용사업자(PP) ${all.length}곳 · 채널 ${all.reduce((t, c) => t + (c.ch || []).length, 0)}개 — 법인을 누르면 재무와 채널 상세가 열립니다`));
+    const seg = el('div', 'fx-seg');
+    GRP.forEach(([k, label]) => { const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.cg === k)); b.addEventListener('click', () => { state.cg = k; state.copen = null; state.climit = 30; rerender(); }); seg.append(b); });
+    const sb = el('div', 'fx-search');
+    const inp = el('input'); inp.type = 'search'; inp.placeholder = '법인·채널·그룹 이름 (예: 재능방송, tvN, 씨제이)'; inp.value = state.cq; inp.setAttribute('aria-label', '채널법인 검색');
+    const go = () => { state.cq = inp.value.trim(); state.copen = null; rerender(); };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(go, 350); });
+    const meBtn = el('button', 'fx-close', '⭐ 재능방송'); meBtn.type = 'button';
+    meBtn.addEventListener('click', () => { state.cq = ''; state.cg = ''; state.copen = (data.find((c) => c.name === ME) || {}).id; rerender(); });
+    sb.append(inp, meBtn);
+    box.append(h, seg, sb);
+    const q = state.cq.toLowerCase();
+    const inG = (c) => !state.cg || (state.cg === '계열' ? /계열$/.test(c.group || '') : c.group === state.cg);
+    let rows = all.filter((c) => inG(c) && (!q || (c.full + c.name + (c.mpp ? c.mpp.g : '') + (c.ch || []).map((x) => x.n).join(' ')).toLowerCase().includes(q)))
+      .sort((a, b) => v(b, Y, 'brev') - v(a, Y, 'brev'));
+    if (state.copen) { const i = rows.findIndex((c) => c.id === state.copen); if (i >= state.climit) state.climit = i + 1; }
+    const list = el('div', 'fx-corps');
+    rows.slice(0, state.climit).forEach((c) => {
+      if (c.id === state.copen) { const d = detail(c, () => { state.copen = null; rerender(); }); const sub = d.querySelector('.fx-sub'); if (sub) { const hd = d.querySelector('header'); const mv = []; for (let n = sub; n; n = n.nextSibling) mv.push(n); hd.after(...mv); const fin = el('h4', 'fx-sub', '재무 현황 (2025 재산상황 공표집)'); mv[mv.length - 1].after(fin); } list.append(d); setTimeout(() => d.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
+      const card = el('button', 'fx-corp' + (c.name === ME ? ' me' : '')); card.type = 'button';
+      const top = el('div', 'fx-corp-top'); const nm = el('div');
+      nm.append(el('b', '', c.name));
+      const tags = el('div', 'fx-tags'); [c.group, c.mpp && c.mpp.g !== c.name ? c.mpp.g + ' 그룹' : null].filter(Boolean).forEach((t) => tags.append(el('span', 'fx-tag', t)));
+      nm.append(tags);
+      const rv = el('span', 'fx-rev', '방송매출 ' + money(v(c, Y, 'brev')));
+      top.append(nm, rv); card.append(top);
+      const meta = []; if (c.ch) meta.push('채널 ' + c.ch.length + '개'); if (c.emp) meta.push('종사자 ' + c.emp[12].toLocaleString('ko-KR') + '명'); meta.push('영업손익 ' + money(v(c, Y, 'op')));
+      card.append(el('div', 'fx-corp-meta', meta.join(' · ')));
+      if (c.ch && c.ch.length) {
+        const chips = el('div', 'fx-chips');
+        c.ch.forEach((x) => { const ch = el('span', 'fx-chip'); ch.append(el('span', '', x.n)); const t = txText(x); if (t) ch.append(el('small', '', t)); chips.append(ch); });
+        card.append(chips);
+      } else card.append(el('span', 'fx-none', '실태조사 채널 자료 없음'));
+      card.addEventListener('click', () => { state.copen = c.id; rerender(); });
+      list.append(card);
+    });
+    if (!rows.length) box.append(el('p', 'fx-empty', '조건에 맞는 법인이 없습니다.')); else box.append(list);
+    if (rows.length > state.climit) { const more = el('button', 'fx-close', `더 보기 (${rows.length - state.climit}곳 더)`); more.type = 'button'; more.addEventListener('click', () => { state.climit += 30; rerender(); }); box.append(more); }
+    box.append(el('p', 'fx-note', '법인 목록·재무: 2025년도 방송사업자 재산상황 공표집 · 채널·송출(SO 90곳 중, IPTV 3사 중)·본방송·제작원·MPP 소속·종사자: 2025 방송산업 실태조사(2024년 말 기준).'));
+    return box;
+  }
+
   window.renderFinance = function (root, data) {
     addStyle();
-    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30 });
+    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30 });
     const rerender = () => window.renderFinance(root, data);
     const wrap = el('div', 'fx');
     const seg = el('div', 'fx-seg');
-    [['industry', '업계 요약'], ['company', '업체별 조회']].forEach(([k, label]) => {
+    [['industry', '업계 요약'], ['corps', '채널법인 현황'], ['company', '업체별 재무 조회']].forEach(([k, label]) => {
       const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.view === k));
       b.addEventListener('click', () => { state.view = k; rerender(); }); seg.append(b);
     });
     wrap.append(seg);
     const openCo = (c) => { state.view = 'company'; state.media = c.media; state.q = ''; state.open = c.id; rerender(); window.scrollTo({ top: Math.max(0, root.getBoundingClientRect().top + window.scrollY - 80) }); };
-    wrap.append(state.view === 'industry' ? industry(data, openCo) : companies(data, state, rerender));
-    wrap.append(el('p', 'fx-note', '자료: 방송미디어통신위원회 「2025년도 방송사업자 재산상황 공표집」(2026.6) · 2025년 실적, 전년(2024년) 대비 · 사업자가 제출한 자료로 감사·검증을 거치지 않은 수치이며, 방송 외 사업 실적이 포함될 수 있습니다.'));
+    wrap.append(state.view === 'industry' ? industry(data, openCo) : state.view === 'corps' ? corps(data, state, rerender) : companies(data, state, rerender));
+    wrap.append(el('p', 'fx-note', '자료: 방송미디어통신위원회 「2025년도 방송사업자 재산상황 공표집」(2026.6), 「2025 방송산업 실태조사」 · 재무는 2025년 실적, 전년(2024년) 대비 · 사업자가 제출한 자료로 감사·검증을 거치지 않은 수치이며, 방송 외 사업 실적이 포함될 수 있습니다.'));
     root.replaceChildren(wrap);
   };
 })();
