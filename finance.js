@@ -30,9 +30,9 @@
   const CSS = `
   .fx { display: flex; flex-direction: column; gap: 1.6em; }
   .fx-note { margin: 0; font-size: .9em; color: var(--fx-muted); line-height: 1.6; }
-  .fx-seg { display: flex; flex-wrap: wrap; gap: .5em; }
-  .fx-seg button { font: inherit; font-weight: 800; min-height: 46px; padding: 0 1.2em; border-radius: 999px; border: 2px solid var(--fx-line); background: var(--fx-card); color: var(--fx-ink); cursor: pointer; }
-  .fx-seg button[aria-pressed="true"] { background: var(--fx-accent); color: #fff; border-color: var(--fx-accent); box-shadow: 0 3px 10px color-mix(in srgb, var(--fx-accent) 30%, transparent); }
+  .fx-seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: color-mix(in srgb, var(--fx-ink) 6%, var(--fx-card)); border-radius: 14px; width: fit-content; max-width: 100%; }
+  .fx-seg button { font: inherit; font-weight: 800; min-height: 42px; padding: 0 1.05em; border-radius: 10px; border: 0; background: transparent; color: var(--fx-muted); cursor: pointer; }
+  .fx-seg button[aria-pressed="true"] { background: var(--fx-card); color: var(--fx-ink); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
   .fx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14em), 1fr)); gap: .8em; }
   .fx-card { background: var(--fx-card); border: 1.5px solid var(--fx-line); border-radius: 16px; padding: 1.1em 1.2em; display: flex; flex-direction: column; gap: .45em; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
   .fx-card h3 { margin: 0; font-size: 1.12em; font-weight: 800; }
