@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>플랫폼 공지 모니터링</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#c2410c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="플랫폼 공지">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
   :root {
     --bg: #f7f6f2; --card: #ffffff; --ink: #1d1d1b; --ink2: #4a4a46; --line: #d9d6cc;
@@ -106,6 +113,9 @@
   .row { display: flex; justify-content: space-between; gap: .6em; flex-wrap: wrap; align-items: center; }
   .pill { font-size: .85em; font-weight: 800; padding: .1em .7em; border-radius: 999px; border: 2px solid currentColor; }
   .ok { color: var(--ok); } .pc { color: var(--warn); }
+  .install { min-height: 52px; padding: 0 1.2em; border-radius: 12px; border: 2px solid var(--c0); background: color-mix(in srgb, var(--c0) 10%, var(--card)); color: var(--ink); font-weight: 800; cursor: pointer; }
+  .howto { margin: 0; font-size: .92em; color: var(--ink2); line-height: 1.6; }
+  .howto b { color: var(--ink); }
   .foot { color: var(--ink2); font-size: .95em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; border-top: 1px solid var(--line); padding-top: 1.2em; }
 
   @media (max-width: 720px) {
@@ -124,12 +134,14 @@
     <input id="pw" type="password" inputmode="numeric" aria-label="비밀번호" autofocus>
     <button class="btn" type="submit">들어가기</button>
     <p class="lock-err" id="err" role="alert"></p>
+    <button class="install off" type="button" data-install>📱 홈 화면에 앱으로 추가</button>
+    <p class="howto" data-howto>앱처럼 쓰려면: 화면 오른쪽 위(또는 아래) <b>⋮ 메뉴</b> → <b>홈 화면에 추가</b>를 누르세요.</p>
   </form>
 </div>
 
 <div class="wrap off" id="app">
   <header>
-    <div class="top"><span class="eyebrow">재능방송 플랫폼사업팀 · 플랫폼영업 보조</span><button type="button" class="btn ghost" id="bigBtn" aria-pressed="false">가+ 글자 크게</button></div>
+    <div class="top"><span class="eyebrow">재능방송 플랫폼사업팀 · 플랫폼영업 보조</span><span style="display:flex;gap:.5em;flex-wrap:wrap"><button class="install off" type="button" data-install>📱 앱으로 추가</button><button type="button" class="btn ghost" id="bigBtn" aria-pressed="false">가+ 글자 크게</button></span></div>
     <h1>플랫폼 공지 모니터링</h1>
     <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회 19곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 갱신됩니다.</p>
   </header>
@@ -171,6 +183,21 @@
 
 <script>
 (() => {
+  // 앱 설치(홈 화면에 추가)
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); }); }
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  let installEvt = null;
+  const showInstall = (on) => document.querySelectorAll('[data-install]').forEach((b) => b.classList.toggle('off', !on));
+  if (standalone) document.querySelectorAll('[data-howto]').forEach((p) => p.classList.add('off'));
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; showInstall(true); });
+  window.addEventListener('appinstalled', () => { showInstall(false); document.querySelectorAll('[data-howto]').forEach((p) => p.classList.add('off')); });
+  document.querySelectorAll('[data-install]').forEach((b) => b.addEventListener('click', async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch (e) {}
+    installEvt = null; showInstall(false);
+  }));
+
   const TOPICS = ['수신료·대가산정', '채널평가', '채널개편', '채널 종료·변경', '시청률', 'VOD', '지역채널 커머스', '기타 안내'];
   const KEY = TOPICS.slice(0, 4);
   const GROUPS = ['IPTV', 'MSO', '개별SO', '위성', '협회'];

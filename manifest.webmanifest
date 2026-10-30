@@ -1,0 +1,17 @@
+{
+  "name": "플랫폼 공지 모니터링",
+  "short_name": "플랫폼 공지",
+  "description": "재능방송 플랫폼사업팀 플랫폼 공지·언론보도 모니터링",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f6f2",
+  "theme_color": "#c2410c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
