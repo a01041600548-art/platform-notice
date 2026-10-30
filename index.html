@@ -131,6 +131,16 @@
   #financeTab { --fx-bg: var(--bg); --fx-card: var(--card); --fx-ink: var(--ink); --fx-muted: var(--ink2); --fx-line: var(--line); --fx-up: var(--ok); --fx-down: var(--bad); --fx-accent: var(--c0); --fx-c2: var(--c2); }
   .foot { color: var(--ink2); font-size: .95em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; border-top: 1px solid var(--line); padding-top: 1.2em; }
 
+
+  /* 가독성 강화 */
+  .tab { transition: background .15s ease, color .15s ease; }
+  .tab:hover { color: var(--ink); background: color-mix(in srgb, var(--c0) 8%, transparent); }
+  .tab[aria-selected="true"] { background: var(--c0); color: #fff; box-shadow: 0 3px 10px color-mix(in srgb, var(--c0) 35%, transparent); }
+  .sec > div:first-child > h2, .sec > h2 { position: relative; padding-left: .75em; }
+  .sec > div:first-child > h2::before, .sec > h2::before { content: ''; position: absolute; left: 0; top: .18em; bottom: .18em; width: 6px; border-radius: 3px; background: var(--c0); }
+  .block-h h3, .block-h b { font-size: 1.15em; }
+  .hcard { transition: transform .15s ease; } .hcard:hover { transform: translateY(-2px); }
+  .chip[aria-pressed="true"] { background: var(--c0); border-color: var(--c0); color: #fff; }
   @media (max-width: 720px) {
     body { font-size: 15px; line-height: 1.6; }
     body.big { font-size: 17.5px; }
@@ -194,7 +204,7 @@
     <button class="tab" role="tab" data-tab="monthly" aria-selected="false">월간 누적</button>
     <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false">대상 사이트</button>
     <button class="tab" role="tab" data-tab="newsTab" aria-selected="false">언론보도</button>
-    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산상황</button>
+    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산·채널</button>
   </nav>
 
   <section class="pane" id="recent">
@@ -222,7 +232,7 @@
     <div class="chips" id="cats"></div><div class="block"><div id="newsList"></div></div>
     <p class="muted" style="margin:0">요약은 기사 내용을 짧게 다시 정리한 것입니다. 정확한 내용은 원문 기사에서 확인하세요.</p></section></section>
 
-  <section class="pane off" id="financeTab"><section class="sec"><div><h2>방송사업자 재산상황</h2><span class="muted">2025년도 재산상황 공표집 기준 · 업계 요약과 업체별 재무</span></div><div id="finance"><p class="muted">불러오는 중…</p></div></section></section>
+  <section class="pane off" id="financeTab"><section class="sec"><div><h2>재산상황 · 채널법인</h2><span class="muted">재산상황 공표집 · 방송산업 실태조사 · 채널평가 장르 분류</span></div><div id="finance"><p class="muted">불러오는 중…</p></div></section></section>
 
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
 </div>
