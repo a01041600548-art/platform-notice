@@ -117,10 +117,39 @@
   .foot { color: var(--ink2); font-size: .95em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; border-top: 1px solid var(--line); padding-top: 1.2em; }
 
   @media (max-width: 720px) {
-    .item, .item.wt { grid-template-columns: 1fr; grid-template-areas: "topic" "plat" "title" "sum" "chk" "date"; }
-    .month { grid-template-columns: 1fr; gap: .5em; } .mlabel { padding-top: 0; }
-    .points li { grid-template-columns: 1fr; gap: .4em; }
-    .tabs { position: static; } .tab { flex: 1 1 40%; }
+    body { font-size: 15px; line-height: 1.6; }
+    body.big { font-size: 17.5px; }
+    .wrap { gap: 1.5em; padding: 14px 14px 48px; }
+    h1 { font-size: 1.5em; } h2 { font-size: 1.15em; } h3 { font-size: 1.08em; }
+    .lede { font-size: 1em; }
+    .btn { min-height: 44px; padding: 0 1em; }
+    .top .btn { min-height: 38px; font-size: .9em; padding: 0 .8em; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; position: sticky; top: 0; border-radius: 0 0 14px 14px; margin: 0 -14px; padding: .4em 14px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: none; min-height: 42px; padding: 0 1em; font-size: .95em; border-radius: 10px; }
+    .pane, .sec { gap: 1.2em; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5em; }
+    .tile { min-height: 0; padding: .75em .85em; gap: .3em; border-width: 1.5px; border-radius: 12px; }
+    .tile p { font-size: .92em; }
+    .tile .num { font-size: 1.7em; }
+    .hl { gap: .7em; }
+    .hcard { padding: .95em 1em; gap: .45em; border-width: 1.5px; border-top-width: 5px; border-radius: 12px; }
+    .htitle { font-size: 1.02em; }
+    .chk { padding: .55em .7em; font-size: .95em; }
+    .search { padding: 1em; gap: .7em; border-width: 1.5px; border-radius: 12px; }
+    .input, .select { min-height: 44px; flex: 1 1 100%; }
+    .chip { min-height: 38px; padding: 0 .85em; font-size: .92em; }
+    .block { padding: .2em 1em; border-width: 1.5px; border-radius: 12px; }
+    .block-h { padding: .8em 0 .6em; }
+    .item, .item.wt { grid-template-columns: 1fr; grid-template-areas: "topic" "plat" "title" "sum" "chk" "date"; row-gap: .25em; padding: .85em 0; }
+    .c-plat { font-size: .92em; } .c-date { font-size: .88em; }
+    .c-title { font-size: 1em; } .c-sum, .c-chk { font-size: .93em; }
+    .badge { font-size: .85em; padding: .1em .65em; }
+    .month { grid-template-columns: 1fr; gap: .4em; } .mlabel { padding-top: 0; } .mlabel b { display: inline; font-size: 1.4em; margin-right: .4em; }
+    .mcard { padding: 1em; border-width: 1.5px; border-radius: 12px; }
+    .points li { grid-template-columns: 1fr; gap: .3em; }
+    .site { padding: .85em .95em; border-width: 1.5px; }
+    .lock-box { padding: 26px 20px; } .lock-box h1 { font-size: 1.35em; } .lock-box input { font-size: 1.3em; min-height: 54px; }
   }
 </style>
 </head>
