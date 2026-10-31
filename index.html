@@ -205,11 +205,94 @@
     .site { padding: .85em .95em; border-width: 1.5px; }
     .lock-box { padding: 26px 20px; } .lock-box h1 { font-size: 1.35em; } .lock-box input { font-size: 1.3em; min-height: 54px; }
   }
+
+  /* ── 디자인 시스템 v3 · 앱 셸 ── */
+  :root { --bg: #f5f6f8; --card: #ffffff; --ink: #0f172a; --ink2: #526077; --line: #e3e7ee; --c0: #ea580c; --brand: #ea580c;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.05); --radius: 14px; --side: 256px; --navy: #0f172a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b1018; --card: #121a26; --ink: #e8edf4; --ink2: #9aa8bb; --line: #233044; --c0: #fb923c; --shadow: 0 1px 2px rgba(0,0,0,.3); --navy: #070b12; } }
+  body { background: var(--bg); background-image: none; }
+  .shell { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); min-height: 100vh; }
+  .shell.off { display: none !important; }
+  .side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 14px; padding: 22px 14px 18px; background: var(--navy); color: #e2e8f0; overflow-y: auto; }
+  .brand { display: flex; gap: 12px; align-items: center; padding: 2px 8px 18px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .logo { width: 42px; height: 42px; flex: none; border-radius: 12px; background: linear-gradient(135deg, #fb923c, #ea580c 60%, #c2410c); display: grid; place-items: center; font-weight: 900; color: #fff; font-size: .82em; letter-spacing: .02em; box-shadow: 0 6px 16px rgba(234,88,12,.35); }
+  .logo.big { width: 64px; height: 64px; border-radius: 18px; font-size: 1.1em; margin: 0 auto; }
+  .brand b { display: block; color: #fff; font-size: 1.02em; line-height: 1.3; letter-spacing: -.02em; }
+  .brand small { color: #94a3b8; font-size: .78em; font-weight: 600; }
+  .side .tabs { position: static; flex-direction: column; flex-wrap: nowrap; gap: 3px; padding: 0; margin: 0; background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; overflow: visible; }
+  .navh { font-size: .72em; font-weight: 800; letter-spacing: .06em; color: #64748b; padding: 14px 12px 6px; }
+  .side .tab { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 14px; border: 0; border-radius: 10px; background: none; color: #cbd5e1; font-size: 1em; font-weight: 700; text-align: left; box-shadow: none; transition: background .15s, color .15s; }
+  .side .tab svg { width: 20px; height: 20px; flex: none; opacity: .8; }
+  .side .tab:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .side .tab[aria-selected="true"] { background: rgba(251,146,60,.15); color: #fff; box-shadow: inset 3px 0 0 #fb923c; }
+  .side .tab[aria-selected="true"] svg { color: #fb923c; opacity: 1; }
+  .side .tab .ts { display: none; }
+  .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding: 16px 8px 0; border-top: 1px solid rgba(255,255,255,.08); font-size: .84em; color: #94a3b8; }
+  .side-foot p { margin: 0; line-height: 1.5; } .side-foot b { color: #e2e8f0; font-variant-numeric: tabular-nums; }
+  .sbtn { min-height: 42px; padding: 0 1em; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #e2e8f0; font-weight: 800; cursor: pointer; }
+  .sbtn:hover { background: rgba(255,255,255,.1); }
+  .sbtn[aria-pressed="true"] { background: #fff; color: #0f172a; border-color: #fff; }
+  main.wrap { max-width: 1240px; width: 100%; margin: 0 auto; padding: 32px clamp(18px, 3.2vw, 44px) 80px; gap: 1.9em; min-width: 0; }
+  body:not(.home) .hero { display: none; }
+  .hero { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 1.7em 1.9em 1.6em; box-shadow: var(--shadow); gap: .55em; }
+  .hero::after { right: -120px; top: -140px; width: 380px; height: 380px; background: radial-gradient(circle, color-mix(in srgb, var(--c0) 16%, transparent), transparent 65%); }
+  .hero h1 { color: var(--ink); font-size: 1.9em; letter-spacing: -.03em; }
+  .hero .eyebrow { color: var(--c0); font-weight: 800; letter-spacing: 0; }
+  .hero .lede { color: var(--ink2); } .hero .lede b { color: var(--ink); }
+  .stats { gap: .7em; margin-top: .6em; }
+  .stat { background: var(--bg); border: 1px solid var(--line); backdrop-filter: none; border-radius: 12px; min-width: 10em; padding: .75em 1.05em; gap: .1em; }
+  .stat span { color: var(--ink2); font-size: .82em; } .stat b { color: var(--ink); font-size: 1.7em; letter-spacing: -.02em; }
+  .stat:first-child { background: color-mix(in srgb, var(--c0) 8%, var(--card)); border-color: color-mix(in srgb, var(--c0) 30%, var(--line)); }
+  .stat:first-child b { color: var(--c0); }
+  .tile, .hcard, .block, .search, .mcard, .site, details.basis { border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .hcard { border-top: 4px solid; }
+  .tile { min-height: 6em; }
+  .tile:hover, .hcard:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,23,42,.08); }
+  .tile.key { border-color: color-mix(in srgb, var(--c0) 35%, var(--line)); }
+  .sec > div:first-child > h2 { font-size: 1.5em; letter-spacing: -.03em; padding-left: 0; }
+  .sec > div:first-child > h2::before { display: none; }
+  .pane > .sec:first-child > div:first-child > h2 { font-size: 1.75em; }
+  .btn { border-radius: 10px; border-width: 1.5px; }
+  .btn:not(.ghost) { background: var(--ink); border-color: var(--ink); }
+  .input, .select { border-width: 1.5px; border-radius: 10px; background: var(--card); }
+  .input:focus, .select:focus { border-color: var(--c0); outline: 3px solid color-mix(in srgb, var(--c0) 20%, transparent); }
+  .chip { border-width: 1.5px; }
+  .lock { background: radial-gradient(900px 500px at 80% -10%, rgba(234,88,12,.35), transparent 60%), linear-gradient(160deg, #0f172a, #111827 60%, #1c1917); }
+  .lock-box { border: 0; border-radius: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.35); padding: 36px 28px; }
+  .lock-box input { border-width: 1.5px; }
+  .foot { border-top: 1px solid var(--line); }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: 1fr; }
+    .side { position: sticky; top: 0; z-index: 30; height: auto; flex-direction: row; align-items: center; gap: 10px; padding: 10px 14px; overflow: visible; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+    .brand { border: 0; padding: 0; flex: 1; min-width: 0; gap: 10px; }
+    .logo { width: 34px; height: 34px; border-radius: 10px; font-size: .7em; }
+    .brand b { font-size: .98em; } .brand small { font-size: .74em; }
+    .side-foot { margin: 0; padding: 0; border: 0; flex-direction: row; }
+    .side-foot p { display: none; }
+    .sbtn { min-height: 38px; padding: 0 .85em; font-size: .88em; }
+    .side .tabs { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 40; flex-direction: row; gap: 2px; margin: 0; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(15,23,42,.08); border-radius: 0; }
+    .navh { display: none; }
+    .side .tab { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; min-height: 56px; padding: 0; color: var(--ink2); font-size: .74em; font-weight: 800; text-align: center; border-radius: 12px; }
+    .side .tab svg { width: 22px; height: 22px; opacity: 1; }
+    .side .tab .tl { display: none; } .side .tab .ts { display: block; }
+    .side .tab:hover { background: none; color: var(--ink2); }
+    .side .tab[aria-selected="true"] { background: color-mix(in srgb, var(--c0) 11%, transparent); color: var(--c0); box-shadow: none; }
+    .side .tab[aria-selected="true"] svg { color: var(--c0); }
+    main.wrap { padding: 16px 14px calc(96px + env(safe-area-inset-bottom)); gap: 1.4em; }
+    .totop { bottom: calc(82px + env(safe-area-inset-bottom)); }
+    .hero { padding: 1.15em 1.15em; border-radius: 14px; } .hero h1 { font-size: 1.45em; }
+    .stat { min-width: 0; flex: 1 1 28%; padding: .55em .7em; } .stat b { font-size: 1.3em; }
+    .pane > .sec:first-child > div:first-child > h2 { font-size: 1.35em; }
+    .sec > div:first-child > h2 { font-size: 1.2em; }
+    .foot { padding-bottom: .5em; }
+  }
+  @media (max-width: 360px) { .brand small { display: none; } .side .tab { font-size: .68em; } }
 </style>
 </head>
 <body>
 <div class="lock" id="lock">
   <form class="lock-box" id="lockForm" autocomplete="off">
+    <span class="logo big" aria-hidden="true">JEI</span>
     <h1>플랫폼 공지 모니터링</h1>
     <p class="muted" style="margin:0">재능방송 플랫폼사업팀<br>비밀번호를 입력해 주세요.</p>
     <input id="pw" type="password" inputmode="numeric" aria-label="비밀번호" autofocus>
@@ -219,22 +302,28 @@
   </form>
 </div>
 
-<div class="wrap off" id="app">
+<div class="shell off" id="app">
+<aside class="side">
+  <div class="brand"><span class="logo" aria-hidden="true">JEI</span><div><b>플랫폼영업 보조</b><small>재능방송 플랫폼사업팀</small></div></div>
+  <nav class="tabs" role="tablist" aria-label="메뉴">
+    <div class="navh" role="presentation">공지 모니터링</div>
+    <button class="tab" role="tab" data-tab="recent" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="tl">최근 1달 공지</span><span class="ts">공지</span></button>
+    <button class="tab" role="tab" data-tab="monthly" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h6"/></svg><span class="tl">월간 누적</span><span class="ts">월간</span></button>
+    <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span class="tl">대상 사이트</span><span class="ts">사이트</span></button>
+    <div class="navh" role="presentation">시장 · 데이터</div>
+    <button class="tab" role="tab" data-tab="newsTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg><span class="tl">언론보도</span><span class="ts">뉴스</span></button>
+    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/></svg><span class="tl">재산·채널법인</span><span class="ts">재산</span></button>
+    <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg><span class="tl">채널 라인업</span><span class="ts">라인업</span></button>
+  </nav>
+  <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false">가+ 글자 크게</button><p>마지막 갱신<br><b id="stamp">—</b></p></div>
+</aside>
+<main class="wrap">
   <header class="hero">
-    <div class="top"><span class="eyebrow">재능방송 플랫폼사업팀 · 플랫폼영업 보조</span><button type="button" class="btn ghost" id="bigBtn" aria-pressed="false">가+ 글자 크게</button></div>
+    <span class="eyebrow">오늘의 플랫폼 공지 브리핑</span>
     <h1>플랫폼 공지 모니터링</h1>
-    <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회 19곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 갱신됩니다.</p>
+    <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회 19곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 자동으로 갱신됩니다.</p>
     <div class="stats"><div class="stat"><span>최근 1달 공지</span><b id="sTotal">—</b></div><div class="stat"><span>핵심 이슈</span><b id="sKey">—</b></div><div class="stat"><span>업계 기사</span><b id="sNews">—</b></div></div>
   </header>
-
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" data-tab="recent" aria-selected="true">최근 1달 공지</button>
-    <button class="tab" role="tab" data-tab="monthly" aria-selected="false">월간 누적</button>
-    <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false">대상 사이트</button>
-    <button class="tab" role="tab" data-tab="newsTab" aria-selected="false">언론보도</button>
-    <button class="tab" role="tab" data-tab="financeTab" aria-selected="false">재산·채널법인</button>
-    <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false">채널 라인업</button>
-  </nav>
 
   <section class="pane" id="recent">
     <div class="tiles" id="tiles"></div>
@@ -276,6 +365,7 @@
 
   <button type="button" class="totop" id="totop" aria-label="맨 위로">▲ 맨 위로</button>
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
+</main>
 </div>
 
 <script src="finance.js"></script>
@@ -332,6 +422,8 @@
       store.set(pw);
       $('lock').classList.add('off'); $('app').classList.remove('off');
       render();
+      $('stamp').textContent = $('updated').textContent || '—';
+      window.__go(location.hash.slice(1) || (() => { try { return localStorage.getItem('pn-tab'); } catch (e) { return null; } })() || 'recent');
     } catch (e) {
       store.del();
       $('err').textContent = silent ? '' : (e.message === 'load' ? '자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.' : '비밀번호가 맞지 않습니다.');
@@ -453,16 +545,25 @@
   $('reset').addEventListener('click', () => { $('q').value = ''; $('plat').value = ''; search(); });
   document.querySelectorAll('.qk').forEach((c) => c.addEventListener('click', () => { $('q').value = c.dataset.q; search(); }));
 
-  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+  const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  function go(id) {
+    const b = document.querySelector('.tab[data-tab="' + id + '"]') || document.querySelector('.tab');
+    id = b.dataset.tab;
     document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
-    document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('off', p.id !== b.dataset.tab));
-    if (b.dataset.tab === 'financeTab') loadFinance();
-    if (b.dataset.tab === 'lineupTab') loadLineup();
-    const nav = document.querySelector('.tabs'); if (window.scrollY > nav.offsetTop) window.scrollTo({ top: Math.max(0, nav.offsetTop - 8) });
-  }));
+    document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('off', p.id !== id));
+    document.body.classList.toggle('home', id === 'recent');
+    if (id === 'financeTab') loadFinance();
+    if (id === 'lineupTab') loadLineup();
+    ls.set('pn-tab', id);
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    window.scrollTo({ top: 0 });
+  }
+  window.__go = go;
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => go(b.dataset.tab)));
+  if (ls.get('pn-big') === '1') { document.body.classList.add('big'); $('bigBtn').setAttribute('aria-pressed', 'true'); }
   window.addEventListener('scroll', () => { const t = $('totop'); if (t) t.classList.toggle('on', window.scrollY > 600); }, { passive: true });
   $('totop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  $('bigBtn').addEventListener('click', () => { const on = !document.body.classList.contains('big'); document.body.classList.toggle('big', on); $('bigBtn').setAttribute('aria-pressed', String(on)); });
+  $('bigBtn').addEventListener('click', () => { const on = !document.body.classList.contains('big'); document.body.classList.toggle('big', on); $('bigBtn').setAttribute('aria-pressed', String(on)); ls.set('pn-big', on ? '1' : '0'); });
 })();
 </script>
 </body>

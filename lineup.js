@@ -88,8 +88,8 @@
   .lu-mt th { text-align: right; font-size: .85em; color: var(--lu-muted); font-weight: 800; padding: .5em .7em; border-bottom: 2px solid var(--lu-line); white-space: nowrap; }
   .lu-mt th:first-child { text-align: left; }
   .lu-mt td { padding: .55em .7em; border-bottom: 1px solid var(--lu-line); vertical-align: middle; }
-  .lu-mt td.who { font-weight: 800; white-space: nowrap; }
-  .lu-mt td.who small { display: block; font-weight: 600; font-size: .78em; color: var(--lu-muted); margin-top: .15em; }
+  .lu-mt td.lw { font-weight: 800; white-space: nowrap; }
+  .lu-mt td.lw small { display: block; font-weight: 600; font-size: .78em; color: var(--lu-muted); margin-top: .15em; }
   .lu-mt td.n { text-align: right; white-space: nowrap; }
   .lu-mt td.n b { font-size: 1.35em; font-weight: 800; }
   .lu-mt td.n small { display: block; font-size: .76em; color: var(--lu-muted); font-weight: 700; }
@@ -133,7 +133,7 @@
     mine.forEach((c) => hr.append(el('th', '', c.n))); const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
     G.forEach((gr) => {
-      const tr = el('tr'); const td0 = el('td', 'who'); td0.append(tbadge(gr.p), document.createTextNode(' ' + gr.op)); if (gr.idx.length > 1) td0.append(el('small', '', '방송구역 ' + gr.idx.length + '곳')); tr.append(td0);
+      const tr = el('tr'); const td0 = el('td', 'lw'); td0.append(tbadge(gr.p), document.createTextNode(' ' + gr.op)); if (gr.idx.length > 1) td0.append(el('small', '', '방송구역 ' + gr.idx.length + '곳')); tr.append(td0);
       const details = [];
       mine.forEach((c) => {
         const vals = gr.idx.map((i) => ({ i, v: c.c[i] })).filter((x) => x.v);
