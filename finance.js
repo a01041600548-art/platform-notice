@@ -217,7 +217,7 @@
     const pl = data.filter((c) => PLAT.includes(c.media));
     const so = pl.filter((c) => c.media === 'SO');
     const one = (c) => ({ name: PNAME[c.name] || c.name, kind: c.media === '위성방송' ? '위성' : c.media, rows: [c] });
-    const mso = (g) => ({ name: MSO[g], kind: 'MSO · SO ' + so.filter((c) => c.group === g).length + '곳', rows: so.filter((c) => c.group === g), subs: true });
+    const mso = (g) => ({ name: MSO[g], kind: 'MSO · SO ' + so.filter((c) => c.group === g).length + '개사', rows: so.filter((c) => c.group === g), subs: true });
     const indiv = so.filter((c) => c.group === '개별 SO').map((c) => ({ name: c.name, kind: '개별 SO', rows: [c] }));
     const by = (n) => pl.find((c) => c.name === n);
     if (mode === 'so') return so.map((c) => ({ name: c.name, kind: MSO[c.group] || '개별 SO', rows: [c] }));
@@ -282,7 +282,7 @@
       const sh = el('td'); if (!isR && total) { const w = Math.max(2, Math.abs(a) / maxA * 60); const bar = el('span', 'fx-share'); bar.style.width = w + 'px'; sh.append(bar, document.createTextNode((a / total * 100).toFixed(1) + '%')); } tr.append(sh);
       return tr;
     };
-    rb.append(row('tot', '', state.pu === 'so' ? 'SO 전체' : '유료방송 전체', state.pu === 'so' ? 'SO 90곳' : 'IPTV·SO·위성', total, totalP));
+    rb.append(row('tot', '', state.pu === 'so' ? 'SO 전체' : '유료방송 전체', state.pu === 'so' ? 'SO 90개사' : 'IPTV·SO·위성', total, totalP));
     us.forEach((u, i) => {
       const kids = u.parts || (u.subs && state.pu !== 'so' ? u.rows.map((c) => ({ name: c.name, kind: '', rows: [c] })) : null);
       const tr = row(kids ? 'exp' + (state.pexp[u.name] ? ' open' : '') : '', String(i + 1), u.name, u.kind, u.a, u.b);
@@ -304,7 +304,7 @@
       const rows = data.filter((c) => c.media === m);
       const cur = sum(rows, Y, 'brev'), prev = sum(rows, P, 'brev'), op = sum(rows, Y, 'op');
       const c = el('div', 'fx-card');
-      const top = el('div', 'fx-row'); top.append(el('span', 'fx-k', m + ' · ' + rows.length + '곳'), chg(cur, prev));
+      const top = el('div', 'fx-row'); top.append(el('span', 'fx-k', m + ' · ' + rows.length + '개사'), chg(cur, prev));
       const opl = el('span', 'fx-k', '영업손익 ' + money(op)); if (op < 0) opl.classList.add('fx-neg');
       c.append(top, el('div', 'fx-big', money(cur)), opl);
       g.append(c);
@@ -352,7 +352,7 @@
     if (me) {
       const ranked = ppAll.filter((c) => v(c, Y, 'progsupply') > 0).sort((a, b) => v(b, Y, 'progsupply') - v(a, Y, 'progsupply'));
       const rank = ranked.findIndex((c) => c.name === ME) + 1;
-      li(`재능방송의 프로그램제공매출은 ${money(v(me, Y, 'progsupply'))}(PP ${ranked.length}곳 중 ${rank}위, 점유율 ${(v(me, Y, 'progsupply') / ps * 100).toFixed(2)}%)이고, 전년 대비 ${(((v(me, Y, 'progsupply') - v(me, P, 'progsupply')) / v(me, P, 'progsupply')) * 100).toFixed(1)}% 변했습니다.`);
+      li(`재능방송의 프로그램제공매출은 ${money(v(me, Y, 'progsupply'))}(PP ${ranked.length}개사 중 ${rank}위, 점유율 ${(v(me, Y, 'progsupply') / ps * 100).toFixed(2)}%)이고, 전년 대비 ${(((v(me, Y, 'progsupply') - v(me, P, 'progsupply')) / v(me, P, 'progsupply')) * 100).toFixed(1)}% 변했습니다.`);
     }
     box.append(h3, ul);
 
@@ -403,7 +403,7 @@
     if (c.ch) tile('운영 채널', c.ch.length + '개', [...new Set(c.ch.map((x) => x.gn).filter(Boolean))].join(' · '));
     if (c.mpp) tile('MPP 소속 그룹', c.mpp.g, 'PP 매출 점유율 ' + c.mpp.sh + '%' + (c.mpp.with.length ? ' · 계열 ' + c.mpp.with.join(', ') : ''), true);
     const txs = (c.ch || []).filter((x) => x.tx);
-    if (txs.length) tile('평균 SO 송출', Math.round(txs.reduce((t, x) => t + x.tx[0], 0) / txs.length) + '곳', '전체 90개 SO 중');
+    if (txs.length) tile('평균 SO 송출', Math.round(txs.reduce((t, x) => t + x.tx[0], 0) / txs.length) + '개사', '전체 90개 SO 중');
     const prs = (c.ch || []).filter((x) => x.prem != null);
     if (prs.length) tile('평균 본방송 비율', (prs.reduce((t, x) => t + x.prem, 0) / prs.length).toFixed(1) + '%', '연간 방송시간 중 본방');
     sv.append(tiles);
@@ -466,7 +466,7 @@
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
     inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(go, 350); });
     sel.addEventListener('change', go);
-    const meBtn = el('button', 'fx-close', '⭐ 재능방송 보기'); meBtn.type = 'button';
+    const meBtn = el('button', 'fx-close', '재능방송 보기'); meBtn.type = 'button';
     meBtn.addEventListener('click', () => { state.q = ''; state.media = 'PP'; state.open = (data.find((c) => c.name === ME) || {}).id; rerender(); });
     sb.append(inp, sel, meBtn);
     box.append(h, sb);
@@ -500,7 +500,7 @@
     if (!rows.length) box.append(el('p', 'fx-empty', '조건에 맞는 회사가 없습니다.'));
     else box.append(tw);
     if (rows.length > state.limit) {
-      const more = el('button', 'fx-close', `더 보기 (${rows.length - state.limit}곳 더)`); more.type = 'button';
+      const more = el('button', 'fx-close', `더 보기 (${rows.length - state.limit}개사 더)`); more.type = 'button';
       more.addEventListener('click', () => { state.limit += 30; rerender(); });
       box.append(more);
     }
@@ -560,7 +560,7 @@
       const sel = el('select'); sel.setAttribute('aria-label', '법인 구분'); GRP.forEach(([k, l]) => sel.append(new Option(l === '전체' ? '전체 구분' : l, k))); sel.value = state.cg;
       sel.addEventListener('change', () => { state.cg = sel.value; state.copen = null; state.climit = 30; rerender(); }); sb.append(sel);
     }
-    const meBtn = el('button', 'fx-close', '⭐ 재능방송'); meBtn.type = 'button';
+    const meBtn = el('button', 'fx-close', '재능방송만 보기'); meBtn.type = 'button';
     meBtn.addEventListener('click', () => { state.cm = 'corp'; state.cq = ''; state.cg = ''; state.gf = ''; state.copen = (data.find((c) => c.name === ME) || {}).id; rerender(); });
     sb.append(meBtn); box.append(sb);
     const q = state.cq.toLowerCase();
@@ -569,7 +569,7 @@
     const rows = all.filter((c) => inG(c) && (!state.gf || (c.ch || []).some((x) => (x.gn || '평가 외') === state.gf)) && (!q || (c.full + c.name + (c.mpp ? c.mpp.g : '') + (c.ch || []).map((x) => x.n).join(' ')).toLowerCase().includes(q)))
       .sort((a, b) => v(b, Y, 'brev') - v(a, Y, 'brev'));
     if (state.copen) { const i = rows.findIndex((c) => c.id === state.copen); if (i >= state.climit) state.climit = i + 1; }
-    box.append(el('p', 'fx-k', `법인 ${rows.length}곳` + (state.gf ? ` · ${state.gf} 채널 보유` : '')));
+    box.append(el('p', 'fx-k', `법인 ${rows.length}개사` + (state.gf ? ` · ${state.gf} 채널 보유` : '')));
     const list = el('div', 'fx-corps');
     rows.slice(0, state.climit).forEach((c) => {
       if (c.id === state.copen) { const d = detail(c, () => { state.copen = null; rerender(); }); list.append(d); setTimeout(() => d.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
@@ -591,7 +591,7 @@
       list.append(card);
     });
     if (!rows.length) box.append(el('p', 'fx-empty', '조건에 맞는 법인이 없습니다.')); else box.append(list);
-    if (rows.length > state.climit) { const more = el('button', 'fx-close', `더 보기 (${rows.length - state.climit}곳 더)`); more.type = 'button'; more.addEventListener('click', () => { state.climit += 30; rerender(); }); box.append(more); }
+    if (rows.length > state.climit) { const more = el('button', 'fx-close', `더 보기 (${rows.length - state.climit}개사 더)`); more.type = 'button'; more.addEventListener('click', () => { state.climit += 30; rerender(); }); box.append(more); }
     box.append(el('p', 'fx-note', '법인·재무: 2025년도 재산상황 공표집 · 채널·송출·본방송·제작원·MPP·종사자: 2025 방송산업 실태조사(2024년 말 기준) · 장르: 2024 채널평가 채널군 분류(18개 유료방송사, 플랫폼 다수 기준).'));
     return box;
   }
@@ -623,7 +623,7 @@
     t.append(tb); tw.append(t);
     if (!rows.length) wrap.append(el('p', 'fx-empty', '조건에 맞는 채널이 없습니다.')); else wrap.append(tw);
     if (rows.length > state.chlimit) { const more = el('button', 'fx-close', `더 보기 (${rows.length - state.chlimit}개 더)`); more.type = 'button'; more.addEventListener('click', () => { state.chlimit += 60; state.redraw(); }); wrap.append(more); }
-    wrap.append(el('p', 'fx-note', '줄을 누르면 해당 법인의 실태조사 현황이 열립니다 · 평가 플랫폼 = 2024 채널평가에서 이 채널을 평가한 유료방송사 수(18곳 중) · 법인이 "—"인 채널은 실태조사 PP 명단과 연결되지 않은 채널입니다.'));
+    wrap.append(el('p', 'fx-note', '줄을 누르면 해당 법인의 실태조사 현황이 열립니다 · 평가 플랫폼 = 2024 채널평가에서 이 채널을 평가한 유료방송사 수(18개사 중) · 법인이 "—"인 채널은 실태조사 PP 명단과 연결되지 않은 채널입니다.'));
     return wrap;
   }
 
@@ -674,7 +674,7 @@
     const base = state.ru === 'grp' ? grouped(base0) : base0;
     const has = (k) => base.filter((c) => { const x = mval(c, Y, k); return x != null && x !== 0; }).length;
     const ms = lab('순위 항목', el('select'));
-    RKG.forEach(([g, xs]) => { const og = el('optgroup'); og.label = g; xs.forEach(([k, l]) => { const n = has(k); const op = new Option(n ? l + ' · ' + n + '곳' : l + ' · 이 매체는 공표집 항목 없음', k); op.disabled = !n; og.append(op); }); ms.append(og); });
+    RKG.forEach(([g, xs]) => { const og = el('optgroup'); og.label = g; xs.forEach(([k, l]) => { const n = has(k); const op = new Option(n ? l + ' · ' + n + '개사' : l + ' · 이 매체는 공표집 항목 없음', k); op.disabled = !n; og.append(op); }); ms.append(og); });
     if (!has(state.rm)) state.rm = has('brev') ? 'brev' : 'rev';
     ms.value = state.rm;
     ms.addEventListener('change', () => { state.rm = ms.value; rerender(); });
@@ -700,7 +700,7 @@
     const me = rows.find((r) => r.c.name === ME);
     const sum = el('div', 'rk-sum');
     const tile = (lbl, val, sub) => { const c = el('div', 'fx-card'); c.append(el('span', 'fx-k', lbl), el('div', 'fx-big' + (String(val).length > 7 ? ' sm' : ''), val)); if (sub) { const s2 = el('span', 'fx-k'); if (typeof sub === 'string') s2.textContent = sub; else s2.append(sub); c.append(s2); } sum.append(c); };
-    tile('대상 회사', rows.length + '곳', (state.rmd || '전체 매체') + (state.rgr ? ' · ' + state.rgr : ''));
+    tile('대상 회사', rows.length + '개사', (state.rmd || '전체 매체') + (state.rgr ? ' · ' + state.rgr : ''));
     if (!isP) { const s3 = el('span'); s3.append('2024년 ' + money(totalP) + ' ', chg(total, totalP)); tile('합계', money(total), s3); }
     if (rows[0]) tile('1위', rows[0].c.name, isP ? rows[0].a.toFixed(1) + '%' : money(rows[0].a));
     if (me) tile('재능방송 순위', me.rank + '위', (isP ? me.a.toFixed(1) + '%' : money(me.a)) + (total ? ' · 비중 ' + (me.a / total * 100).toFixed(2) + '%' : ''));
@@ -723,7 +723,7 @@
     });
     t.append(tb); tw.append(t);
     if (!shown.length) box.append(el('p', 'fx-empty', '조건에 맞는 회사가 없습니다.')); else box.append(tw);
-    if (shown.length > state.rlim) { const more = el('button', 'fx-close', `더 보기 (${shown.length - state.rlim}곳 더)`); more.type = 'button'; more.addEventListener('click', () => { state.rlim += 50; rerender(); }); box.append(more); }
+    if (shown.length > state.rlim) { const more = el('button', 'fx-close', `더 보기 (${shown.length - state.rlim}개사 더)`); more.type = 'button'; more.addEventListener('click', () => { state.rlim += 50; rerender(); }); box.append(more); }
     if (['asset', 'debt', 'equity', 'debtr'].includes(k) && (!state.rmd || state.rmd === 'SO') && state.ru !== 'grp') box.append(el('p', 'fx-note', '※ 공표집에서 MSO 계열 SO(LG·딜라이브·SKB·HCN·CMB)는 자산·부채·자본이 계열 대표법인(본사)에만 기재되고 개별 SO 칸은 \'-\'로 공표됩니다. 위의 \'계열 합산\'을 누르면 MSO 단위로 비교할 수 있습니다.'));
     box.append(el('p', 'fx-note', '금액 단위는 억·조(공표집 백만원 기준 환산) · 매출·손익은 2025년 실적, 전년(2024년) 대비 · 영업이익률 = 영업손익 ÷ 매출액 · IPTV 3사 손익·자산은 통신 등 방송 외 사업이 포함된 회사 전체 수치입니다.'));
     return box;

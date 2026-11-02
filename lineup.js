@@ -90,6 +90,8 @@
   .lu-mt td { padding: .55em .7em; border-bottom: 1px solid var(--lu-line); vertical-align: middle; }
   .lu-mt td.lw { font-weight: 800; white-space: nowrap; }
   @media (max-width: 720px) { .lu-mt { font-size: .9em; } .lu-mt td.lw { white-space: normal; } .lu-mt td, .lu-mt th { padding-left: .4em; padding-right: .4em; } .lu-mt td.n b { font-size: 1.2em; } }
+  .lu-mt td.n em.lu-prod { display: block; font-style: normal; font-size: .72em; font-weight: 700; color: var(--lu-muted); margin-top: .1em; white-space: nowrap; }
+  td.gl small.lu-cp { display: block; font-size: .66em; font-weight: 600; opacity: .85; white-space: nowrap; line-height: 1.2; }
   .lu-mt td.lw small { display: block; font-weight: 600; font-size: .78em; color: var(--lu-muted); margin-top: .15em; }
   .lu-mt td.n { text-align: right; white-space: nowrap; }
   .lu-mt td.n b { font-size: 1.35em; font-weight: 800; }
@@ -125,9 +127,11 @@
   }
   const pick = (D, gr, state) => { if (gr.idx.length === 1) return gr.idx[0]; const r = state.reg[gr.op]; const f = gr.idx.find((i) => D.plats[i].region === r); return f != null ? f : gr.idx[0]; };
 
+  const sp = (s) => String(s || '').replace(/^(B tv |tv |지니 TV |U\+tv |iTV |UHD |헬로tv )/i, '').trim();
+  const prodOf = (p, v) => (v && p && p.prods && v[1] >= 0 && p.prods[v[1]]) ? sp(p.prods[v[1]]) : '';
   function meCards(D) {
     const G = groupsOf(D);
-    const mine = D.chans.filter((c) => ME.test(c.n) && Object.keys(c.c).length > 3);
+    const mine = D.chans.filter((c) => ME.test(c.n) && Object.keys(c.c).length > 3).sort((a, b) => (/English/i.test(a.n) ? 1 : 0) - (/English/i.test(b.n) ? 1 : 0));
     const card = el('div', 'lu-card lu-mesum');
     const h = el('div', 'lu-mesum-h'); h.append(el('h3', '', '재능방송 채널 번호'), el('span', '', '구역별로 다르면 가장 많은 번호를 표시 · ▸ 구역별 보기')); card.append(h);
     const wrap = el('div', 'lu-wrap2'); const t = el('table', 'lu-mt'); const hr = el('tr'); hr.append(el('th', '', '라인업'));
@@ -144,6 +148,8 @@
         const cnt = {}; vals.forEach((x) => { cnt[x.v[0]] = (cnt[x.v[0]] || 0) + 1; });
         const mode = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0];
         td.append(el('b', '', mode));
+        const mv = vals.find((x) => x.v[0] === mode); const pn = mv ? prodOf(D.plats[mv.i], mv.v) : '';
+        if (pn) td.append(el('em', 'lu-prod', pn + (mv.v[1] > 0 ? '부터' : ' 포함')));
         if (gr.idx.length > 1) {
           const diff = vals.filter((x) => x.v[0] !== mode).length, miss = gr.idx.length - vals.length;
           if (diff || miss) td.append(el('small', '', [diff ? '다름 ' + diff : '', miss ? '없음 ' + miss : ''].filter(Boolean).join(' · ')));
@@ -221,13 +227,13 @@
     rows.slice(0, state.lim).forEach((c) => {
       const tr = el('tr', ME.test(c.n) ? 'me' : '');
       const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
-      cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); if (v && p.prods && p.prods[v[1]]) td.title = p.prods[v[1]] + '부터 제공'; tr.append(td); });
+      cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); if (v && v[1] > 0) { const pn = prodOf(p, v); if (pn) { td.append(el('small', 'lu-cp', pn)); td.title = p.prods[v[1]] + '부터 제공'; } } tr.append(td); });
       tb.append(tr);
     });
     t.append(tb); card.append(t); box.append(card);
     if (rows.length > state.lim) { const more = el('button', 'lu-more', `더 보기 (${rows.length - state.lim}개 더)`); more.type = 'button'; more.addEventListener('click', () => { state.lim += 150; rerender(); }); box.append(more); }
     const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · — = 해당 라인업에 없음 · 번호 위에 마우스를 올리면 제공 상품이 보입니다'));
-    [['#2563eb', '2단계 상품부터'], ['#7c3aed', '3단계 상품부터'], ['#db2777', '4단계 이상']].forEach(([cl, l]) => { const s = el('i', '', '■ ' + l); s.style.color = cl; leg.append(s); });
+    [['#2563eb', '2단계 상품부터'], ['#7c3aed', '3단계 상품부터'], ['#db2777', '4단계 이상'], ['#64748b', '번호 아래 작은 글씨 = 그 상품부터 시청 가능']].forEach(([cl, l]) => { const s = el('i', '', '■ ' + l); s.style.color = cl; leg.append(s); });
     box.append(leg);
     return box;
   }

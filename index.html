@@ -438,6 +438,29 @@
     .tile .num { font-size: 1.35em; }
     .pane > .sec:first-child > div:first-child > h2 { font-size: 1.35em; }
   }
+
+  /* v5 finance refinements */
+  #app .fx-grid { gap: 0 !important; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); overflow: hidden; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr)); }
+  #app .fx-grid > .fx-card { border: 0 !important; border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; margin: 0 -1px -1px 0; }
+  #app .fx-card { border: 1px solid var(--line); }
+  #app .fx-big { font-weight: 600; letter-spacing: -.03em; }
+  #app .gtiles { gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--card); }
+  #app .gtile { border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; margin: 0 -1px -1px 0; position: relative; padding: .7em .85em .7em 1.1em; }
+  #app .gtile::before { content: ''; position: absolute; left: .55em; top: .95em; width: 6px; height: 6px; border-radius: 1px; background: var(--gc); }
+  #app .gtile b { font-weight: 700; }
+  #app .gtile[aria-pressed="true"] { background: var(--ink); color: var(--card); box-shadow: none; }
+  #app .gtile[aria-pressed="true"] small { color: color-mix(in srgb, var(--card) 75%, transparent); }
+  #app .rk-sum { gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--card); }
+  #app .rk-sum > .fx-card { border: 0 !important; border-right: 1px solid var(--line) !important; border-radius: 0 !important; margin-right: -1px; }
+  #app .fx-close { border-radius: 4px; border-width: 1px; font-weight: 600; }
+  @media (max-width: 720px) {
+    #app .fx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #app .fx-grid .fx-big { font-size: 1.3em; }
+    #app .fx-grid .fx-card { padding: .75em .8em; gap: .25em; }
+    #app .gtiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #app .rk-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #app .rk-sum > .fx-card { border-bottom: 1px solid var(--line) !important; }
+  }
 </style>
 </head>
 <body>
@@ -466,6 +489,7 @@
     <button class="tab" role="tab" data-tab="newsTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg><span class="tl">언론보도</span><span class="ts">뉴스</span></button>
     <button class="tab" role="tab" data-tab="financeTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/></svg><span class="tl">재산·채널법인</span><span class="ts">재산</span></button>
     <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg><span class="tl">채널 라인업</span><span class="ts">라인업</span></button>
+    <button class="tab" role="tab" data-tab="calcTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 15h2M14 15h2M8 19h2M14 19h2"/></svg><span class="tl">대가산정 계산기</span><span class="ts">계산기</span></button>
   </nav>
   <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false" aria-label="글자 크게"><span class="bl">가+ 글자 크게</span><span class="bs">가+</span></button><p>공지·언론 갱신<br><b id="stamp">—</b></p></div>
 </aside>
@@ -520,6 +544,9 @@
     </ul></details>
     <div id="lineup"><p class="muted">불러오는 중…</p></div></section></section>
 
+  <section class="pane off" id="calcTab"><section class="sec"><div><h2>콘텐츠 대가산정 계산기</h2><span class="muted">IPTV·케이블이 공표한 산정 방식으로 올해 사용료를 계산하고, 플랫폼 산정서를 검증합니다</span></div>
+    <div id="calc"><p class="muted">불러오는 중…</p></div></section></section>
+
   <button type="button" class="totop" id="totop" aria-label="맨 위로">▲ 맨 위로</button>
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
 </main>
@@ -527,6 +554,7 @@
 
 <script src="finance.js"></script>
 <script src="lineup.js"></script>
+<script src="calc.js"></script>
 <script>
 (() => {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {}); }
@@ -624,6 +652,7 @@
     ['recent', 'monthly', 'sitesTab'].forEach((id) => strip(id, notice, stale));
     strip('newsTab', '<b>언론보도 수집</b> ' + (m ? m[1] + '.' + Number(m[2]) + '.' + Number(m[3]) + ' ' + m[4] + ':' + m[5] : '—') + ' · 최근 기사 분야별 요약', stale);
     strip('financeTab', '<b>자료 기준</b> 2025년도 방송사업자 재산상황 공표집(2025년 실적·2024년 비교) · 2025 방송산업 실태조사 · 2024 채널평가 채널군', false);
+    strip('calcTab', '<b>산정 기준</b> IPTV 3사 콘텐츠 사용료 산정 방안(2024.1) · KCTA 2026 SO 대가산정 기준 개정안(2026.8.13) · 실제 금액은 플랫폼 산정서로 확정', false);
     strip('lineupTab', '<b>라인업 확인</b> 사업자별 기준일은 아래 표의 날짜 · 이용약관 우선, 약관 채널표가 그림인 곳은 홈페이지 기준', false);
   };
   function render() {
@@ -727,6 +756,7 @@
     document.body.classList.toggle('home', id === 'recent');
     if (id === 'financeTab') loadFinance();
     if (id === 'lineupTab') loadLineup();
+    if (id === 'calcTab' && !window.__calcDone) { window.__calcDone = 1; window.renderCalc($('calc')); }
     ls.set('pn-tab', id);
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
     window.scrollTo({ top: 0 });
