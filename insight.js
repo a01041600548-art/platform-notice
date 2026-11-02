@@ -2,6 +2,7 @@
 (function () {
   const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const ME = /^JEI/i;
+  const MINE = () => document.body.classList.contains('mine');
   const GRADES = [['가', 25, 5], ['나', 20, 4], ['다', 15, 3], ['라', 10, 2], ['마', 5, 1]];
   const css = `
   .ix { display: flex; flex-direction: column; gap: 1.2em; }
@@ -62,15 +63,16 @@
       const box = el('div', 'ix');
       const sp = el('div', 'ix-seg');
       R.plats.forEach((p) => { const b = el('button', '', p.name + (p.q.length ? ' · ' + p.q.join('·') : ' · 미공개')); b.type = 'button'; b.setAttribute('aria-pressed', String(p.id === st.p)); b.addEventListener('click', () => { st.p = p.id; draw(); }); sp.append(b); });
+      if (window.pnMineBtn) sp.append(window.pnMineBtn());
       const sg = el('div', 'ix-seg');
       R.genres.forEach((g) => { const n = plat.ch.filter((c) => c.g === g).length; const b = el('button', '', g + (n ? ' ' + n : '')); b.type = 'button'; b.disabled = !n && plat.ch.length > 0; b.setAttribute('aria-pressed', String(g === st.g)); b.addEventListener('click', () => { st.g = g; draw(); }); sg.append(b); });
       box.append(el('span', 'ix-lb', '플랫폼'), sp, el('span', 'ix-lb', '평가 채널군(장르)'), sg); box.querySelectorAll('.ix-lb').forEach((x) => { x.style.marginBottom = '-.8em'; });
       // 우리 채널 요약 (전 플랫폼)
-      const mc = el('div', 'ix-card'); mc.append(Object.assign(el('h3'), { innerHTML: '재능 채널 예상 위치 <small>공시된 2026년 분기 평균 기준 · 시청점유율 항목(25점)</small>' }));
+      const mc = el('div', 'ix-card'); mc.append(Object.assign(el('h3'), { innerHTML: '재능 채널 예상 위치 <small>‘재능방송 보기’를 켰을 때만 표시 · 공시된 2026년 분기 평균 기준 · 시청점유율 항목(25점)</small>' }));
       const mg = el('div', 'ix-me');
       R.plats.filter((p) => p.ch.length).forEach((p) => p.ch.filter((c) => ME.test(c.n.replace(/\s/g, ''))).forEach((c) => { const rows = ranked(p, c.g); const x = rows.find((y) => y.c === c); if (!x) return; const d = el('div'); d.append(el('span', '', p.name + ' · ' + c.n + ' (' + c.g + ')')); const b = el('b'); b.append(x.rank + '위 / ' + rows.length + ' ', Object.assign(el('span', 'ix-g g' + x.gr[0], x.gr[0]))); d.append(b, el('span', '', '예상 ' + x.gr[1] + '점 · 평균 점유율 ' + x.a.toFixed(3) + '%')); mg.append(d); }));
       if (!mg.children.length) mg.append(el('p', 'ix-note', '공시 자료에 재능 채널이 없습니다.'));
-      mc.append(mg); box.append(mc);
+      mc.append(mg); if (MINE()) box.append(mc);
       const card = el('div', 'ix-card');
       card.append(Object.assign(el('h3'), { innerHTML: plat.name + ' · ' + st.g + ' <small>' + (plat.q.length ? '2026년 ' + plat.q.join('·') + ' 공시 · 누적 평균 순' : '자료 없음') + '</small>' }));
       if (!plat.ch.length) { card.append(el('p', 'ix-note', plat.src)); }
@@ -80,7 +82,7 @@
         const hr = el('tr'); [['순위', ''], ['채널', 'l'], ...plat.q.map((q) => [q, 'qcol']), ['평균 점유율', ''], ['최근 분기 순위', ''], ['예상 등급', '']].forEach(([x, c]) => hr.append(el('th', c, x)));
         const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
         rows.forEach((x) => {
-          const tr = el('tr', ME.test(x.c.n.replace(/\s/g, '')) ? 'me' : '');
+          const tr = el('tr', ME.test(x.c.n.replace(/\s/g, '')) && MINE() ? 'me' : '');
           const nm = el('td', 'l'); nm.append(x.c.n); nm.append(el('small', '', 'ch ' + x.c.no));
           const av = el('td'); av.append(x.a.toFixed(3) + '%'); const bar = el('span', 'ix-bar'); bar.style.width = Math.max(2, x.a / max * 60) + 'px'; av.append(bar);
           const mv = el('td'); if (x.rl) { mv.append(x.rl + '위'); if (x.rp) { const dlt = x.rp - x.rl; if (dlt) mv.append(el('small', dlt > 0 ? 'ix-up' : 'ix-dn', (dlt > 0 ? '▲' : '▼') + Math.abs(dlt) + ' (직전 ' + x.rp + '위)')); else mv.append(el('small', '', '직전과 같음')); } } else mv.textContent = '—';

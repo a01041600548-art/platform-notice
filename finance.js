@@ -5,6 +5,7 @@
   const MEDIA = ['IPTV', 'SO', '위성방송', 'PP', '지상파', 'CP'];
   const PLAT = ['IPTV', 'SO', '위성방송'];
   const ME = '재능방송';
+  const MINE = () => document.body.classList.contains('mine');
   const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const v = (c, y, k) => (c.y[y] && c.y[y][k]) || 0;
   const eok = (m) => m / 100; // 백만원 → 억원
@@ -194,7 +195,7 @@
     const box = el('div', 'fx-bars');
     const m = max || Math.max(...rows.map(getVal), 1);
     rows.forEach((c) => {
-      const r = el('div', 'fx-bar' + (c.name === ME ? ' me' : ''));
+      const r = el('div', 'fx-bar' + (c.name === ME && MINE() ? ' me' : ''));
       const tr = el('div', 'track'), f = el('div', 'fill'); f.style.width = Math.max(1, getVal(c) / m * 100) + '%'; tr.append(f);
       r.append(el('b', '', c.name), tr, el('span', '', fmt(getVal(c))));
       box.append(r);
@@ -349,7 +350,7 @@
     ratios.forEach(([m, r, rp, b]) => li(`${m === '위성방송' ? '위성' : m}는 수신료매출 대비 PP 프로그램사용료(기본+유료)를 ${r0(r)} 지급했습니다(전년 ${r0(rp)}). 그중 기본채널 몫은 수신료의 ${r0(b)}입니다.`));
     li(`SO는 홈쇼핑 송출수수료(${money(soHs)})가 수신료매출(${money(soSub)})보다 ${soHs > soSub ? '많아' : '적어'}, 채널 편성에서 홈쇼핑 채널 비중이 계속 중요하게 작동합니다.`);
     li(`PP 전체의 방송프로그램제공매출(플랫폼에서 받은 사용료)은 ${money(ps)}로 전년 대비 ${(((ps - psp) / psp) * 100).toFixed(1)}% 변했습니다.`);
-    const me = data.find((c) => c.name === ME);
+    const me = MINE() ? data.find((c) => c.name === ME) : null;
     if (me) {
       const ranked = ppAll.filter((c) => v(c, Y, 'progsupply') > 0).sort((a, b) => v(b, Y, 'progsupply') - v(a, Y, 'progsupply'));
       const rank = ranked.findIndex((c) => c.name === ME) + 1;
@@ -461,13 +462,13 @@
     const box = el('section', 'fx');
     const h = el('div', 'fx-h'); h.append(el('h2', '', '업체별 재산상황'), el('span', '', '회사·채널 이름으로 찾거나 매체를 고른 뒤, 줄을 누르면 상세(재무·보유 채널)가 열립니다'));
     const sb = el('div', 'fx-search');
-    const inp = el('input'); inp.type = 'search'; inp.placeholder = '회사·채널·그룹 이름 (예: 재능방송, tvN, 중앙홀딩스)'; inp.value = state.q; inp.setAttribute('aria-label', '회사 검색');
+    const inp = el('input'); inp.type = 'search'; inp.placeholder = '회사·채널·그룹 이름 (예: CJ ENM, tvN, 중앙홀딩스)'; inp.value = state.q; inp.setAttribute('aria-label', '회사 검색');
     const sel = el('select'); sel.setAttribute('aria-label', '매체'); ['전체', ...MEDIA, '지상파DMB'].forEach((m) => sel.append(new Option(m === '전체' ? '전체 매체' : m, m === '전체' ? '' : m))); sel.value = state.media;
     const go = () => { state.q = inp.value.trim(); state.media = sel.value; state.open = null; rerender(); };
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
     inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(go, 350); });
     sel.addEventListener('change', go);
-    const meBtn = el('button', 'fx-close', '재능방송 보기'); meBtn.type = 'button';
+    const meBtn = el('button', 'fx-close', '재능방송 상세'); meBtn.type = 'button';
     meBtn.addEventListener('click', () => { state.q = ''; state.media = 'PP'; state.open = (data.find((c) => c.name === ME) || {}).id; rerender(); });
     sb.append(inp, sel, meBtn);
     box.append(h, sb);
@@ -484,7 +485,7 @@
     const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
     rows.slice(0, state.limit).forEach((c) => {
-      const tr = el('tr', 'click' + (c.name === ME ? ' me' : ''));
+      const tr = el('tr', 'click' + (c.name === ME && MINE() ? ' me' : ''));
       const name = el('td'); name.append(el('div', '', c.name)); const sm = el('small', 'fx-k', c.media + ' · ' + (c.group || '')); name.append(sm);
       const m = (k) => { const td = el('td', '', money(v(c, Y, k))); if (v(c, Y, k) < 0) td.classList.add('fx-neg'); const s = el('small'); s.append(chg(v(c, Y, k), v(c, P, k))); td.append(s); return td; };
       if (plat) {
@@ -552,7 +553,7 @@
     gl.forEach((g) => { const r = rowsCh.filter((x) => x.g === g); if (!r.length) return; mk(g, g, r.length, new Set(r.filter((x) => x.c).map((x) => x.c.id)).size); });
     box.append(tiles);
     const sb = el('div', 'fx-search');
-    const inp = el('input'); inp.type = 'search'; inp.placeholder = '법인·채널 이름 (예: 재능방송, tvN, 투니버스)'; inp.value = state.cq; inp.setAttribute('aria-label', '검색');
+    const inp = el('input'); inp.type = 'search'; inp.placeholder = '법인·채널 이름 (예: CJ ENM, tvN, 투니버스)'; inp.value = state.cq; inp.setAttribute('aria-label', '검색');
     const go = () => { state.cq = inp.value.trim(); state.copen = null; rerender(); };
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
     inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(go, 350); });
@@ -574,7 +575,7 @@
     const list = el('div', 'fx-corps');
     rows.slice(0, state.climit).forEach((c) => {
       if (c.id === state.copen) { const d = detail(c, () => { state.copen = null; rerender(); }); list.append(d); setTimeout(() => d.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
-      const card = el('button', 'fx-corp' + (c.name === ME ? ' me' : '')); card.type = 'button';
+      const card = el('button', 'fx-corp' + (c.name === ME && MINE() ? ' me' : '')); card.type = 'button';
       const top = el('div', 'fx-corp-top'); const nm = el('div');
       nm.append(el('b', '', c.name));
       const tags = el('div', 'fx-tags'); [c.group, c.mpp && c.mpp.g !== c.name ? c.mpp.g + ' 그룹' : null].filter(Boolean).forEach((t) => tags.append(el('span', 'fx-tag', t)));
@@ -614,7 +615,7 @@
     ['채널', '장르', '법인', 'SO 송출', '위성', 'IPTV', '본방송', '자체제작', '평가 플랫폼'].forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
     rows.slice(0, state.chlimit).forEach((r) => {
-      const tr = el('tr', r.c && r.c.name === ME ? 'me click' : (r.c ? 'click' : ''));
+      const tr = el('tr', r.c && r.c.name === ME && MINE() ? 'me click' : (r.c ? 'click' : ''));
       const tdg = el('td'); tdg.append(gbadge(r.g));
       const x = r.x;
       tr.append(el('td', '', r.n), tdg, el('td', '', r.c ? r.c.name : '—'), el('td', '', x.tx ? x.tx[0] + '/90' : '—'), el('td', '', x.tx ? (x.tx[1] ? 'O' : '—') : '—'), el('td', '', x.tx ? x.tx[3] + '/3' : '—'), el('td', '', x.prem != null ? x.prem.toFixed(1) + '%' : '—'), el('td', '', x.src ? x.src[0].toFixed(0) + '%' : '—'), el('td', '', r.gw ? r.gw + '/18' : '—'));
@@ -693,7 +694,7 @@
     ss.addEventListener('change', () => { state.rsz = ss.value; rerender(); });
     const os = lab('정렬 기준', el('select')); [['val', '2025년 금액 큰 순'], ['low', '2025년 금액 작은 순'], ['gr', '전년 대비 증가율 높은 순'], ['gd', '전년 대비 감소율 큰 순'], ['abs', '증감액 큰 순']].forEach(([k, l]) => os.append(new Option(l, k))); os.value = state.ro;
     os.addEventListener('change', () => { state.ro = os.value; rerender(); });
-    const qi = lab('회사 이름', el('input')); qi.type = 'search'; qi.placeholder = '예: 재능, CJ, 딜라이브'; qi.value = state.rq;
+    const qi = lab('회사 이름', el('input')); qi.type = 'search'; qi.placeholder = '예: CJ, 티캐스트, 딜라이브'; qi.value = state.rq;
     qi.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(() => { state.rq = qi.value.trim(); rerender(); }, 300); });
     box.append(ctl);
     const k = state.rm, isP = PCT.has(k);
@@ -706,7 +707,7 @@
     rows.forEach((r, i) => { r.rank = i + 1; });
     const shown = q ? rows.filter((r) => (r.c.name + r.c.full).toLowerCase().includes(q)) : rows;
     const total = isP ? null : rows.reduce((t, r) => t + r.a, 0), totalP = isP ? null : rows.reduce((t, r) => t + (r.b || 0), 0);
-    const me = rows.find((r) => r.c.name === ME);
+    const me = MINE() ? rows.find((r) => r.c.name === ME) : null;
     const sum = el('div', 'rk-sum');
     const tile = (lbl, val, sub) => { const c = el('div', 'fx-card'); c.append(el('span', 'fx-k', lbl), el('div', 'fx-big' + (String(val).length > 7 ? ' sm' : ''), val)); if (sub) { const s2 = el('span', 'fx-k'); if (typeof sub === 'string') s2.textContent = sub; else s2.append(sub); c.append(s2); } sum.append(c); };
     tile('대상 회사', rows.length + '개사', (state.rmd || '전체 매체') + (state.rgn ? ' · ' + state.rgn + ' 채널 보유' : '') + (state.rgr ? ' · ' + state.rgr : ''));
@@ -720,7 +721,7 @@
     const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
     const fmt = (x) => x == null ? '—' : isP ? x.toFixed(1) + '%' : money(x);
     shown.slice(0, state.rlim).forEach((r) => {
-      const tr = el('tr', 'click' + (r.c.name === ME ? ' me' : ''));
+      const tr = el('tr', 'click' + (r.c.name === ME && MINE() ? ' me' : ''));
       const rk = el('td', 'rk'); rk.append(el('i', '', r.rank));
       const nm = el('td', 'nm'); nm.append(r.c.name, el('small', '', [r.c.media, r.c.group, r.c.size].filter(Boolean).join(' · ')));
       if (state.rgn) { const cs = inGn(r.c).map((x) => x.n); const all = (r.c.ch || []).length; nm.append(el('small', 'rk-chs', state.rgn + ': ' + cs.join(', ') + (all > cs.length ? ` (전체 ${all}개 채널 중)` : ''))); }
@@ -751,6 +752,7 @@
       const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.view === k));
       b.addEventListener('click', () => { state.view = k; rerender(); }); seg.append(b);
     });
+    seg.append(window.pnMineBtn ? window.pnMineBtn() : el('span'));
     wrap.append(seg);
     const openCo = (c) => { state.view = 'company'; state.media = c.media; state.q = ''; state.open = c.id; rerender(); window.scrollTo({ top: Math.max(0, root.getBoundingClientRect().top + window.scrollY - 80) }); };
     wrap.append(state.view === 'industry' ? industry(data, openCo) : state.view === 'corps' ? corps(data, state, rerender) : state.view === 'plat' ? platforms(data, state, rerender) : state.view === 'rank' ? ranking(data, state, rerender, openCo) : companies(data, state, rerender));

@@ -6,6 +6,7 @@
   const GORDER = ['지상파·종편·보도', '홈쇼핑', '국내드라마', '해외드라마', '예능·오락', '영화', '스포츠', '시사·경제', '교양·생활정보', '어린이·교육', '취미·레저', '음악', '종교', '기타', '유료채널', '평가 외·해외'];
   const TC = { '디지털': '#2563eb', '8VSB': '#ea580c', 'IP': '#7c3aed', 'IPTV': '#0f766e', '위성': '#0369a1' };
   const ME = /JEI|재능/;
+  const MINE = () => document.body.classList.contains('mine');
   const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const CSS = `
   .lu { display: flex; flex-direction: column; gap: 1.3em; }
@@ -198,7 +199,7 @@
     r1.append(tt); bar.append(r1);
     const r2 = el('div', 'lu-row'); r2.append(el('b', '', '방송구역')); r2.append(regionPickers(D, G, state, rerender)); bar.append(r2);
     const r3 = el('div', 'lu-row'); r3.append(el('b', '', '찾기'));
-    const inp = el('input', 'lu-in'); inp.type = 'search'; inp.placeholder = '채널 이름 (예: 투니버스, tvN, 재능)'; inp.value = state.q; inp.setAttribute('aria-label', '채널 검색');
+    const inp = el('input', 'lu-in'); inp.type = 'search'; inp.placeholder = '채널 이름 (예: 투니버스, tvN, OCN)'; inp.value = state.q; inp.setAttribute('aria-label', '채널 검색');
     inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(() => { state.q = inp.value.trim(); rerender(); }, 300); });
     const sort = el('select', 'lu-in'); sort.setAttribute('aria-label', '정렬');
     const cols = G.filter((g) => !state.k || g.type === state.k).map((g) => ({ g, i: pick(D, g, state) }));
@@ -225,7 +226,7 @@
     const thd = el('thead'); thd.append(hr); t.append(thd);
     const tb = el('tbody');
     rows.slice(0, state.lim).forEach((c) => {
-      const tr = el('tr', ME.test(c.n) ? 'me' : '');
+      const tr = el('tr', ME.test(c.n) && MINE() ? 'me' : '');
       const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
       cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); if (v && v[1] > 0) { const pn = prodOf(p, v); if (pn) { td.append(el('small', 'lu-cp', pn)); td.title = p.prods[v[1]] + '부터 제공'; } } tr.append(td); });
       tb.append(tr);
@@ -242,7 +243,7 @@
     const box = el('div', 'lu');
     const bar = el('div', 'lu-card lu-bar'); const r = el('div', 'lu-row'); r.append(el('b', '', '채널 선택'));
     const sel = el('select', 'lu-in');
-    const cands = D.chans.filter((c) => D.plats.some((p, i) => p.kind === '케이블' && c.c[i])).sort((a, b) => (ME.test(b.n) - ME.test(a.n)) || a.n.localeCompare(b.n, 'ko'));
+    const cands = D.chans.filter((c) => D.plats.some((p, i) => p.kind === '케이블' && c.c[i])).sort((a, b) => (MINE() ? ME.test(b.n) - ME.test(a.n) : 0) || a.n.localeCompare(b.n, 'ko'));
     cands.forEach((c) => sel.append(new Option(c.n + ' (' + c.g + ')', c.n)));
     if (!state.rc) state.rc = (cands[0] || {}).n; sel.value = state.rc;
     sel.addEventListener('change', () => { state.rc = sel.value; rerender(); });
@@ -282,7 +283,7 @@
       const items = list.filter((x) => !gg || x.c.g === gg);
       if (gg) { const h = el('h4', 'lu-sub', gg + ' · ' + items.length); h.style.setProperty('--gc', GC[gg]); box.append(h); }
       const grid = el('div', 'lu-list');
-      items.forEach(({ c, v }) => { const it = el('div', 'lu-item' + (ME.test(c.n) ? ' me' : '')); it.style.setProperty('--gc', GC[c.g] || '#94a3b8'); it.append(el('b', '', v[0]), el('span', '', c.n)); const sm = [c.g]; if (p.prods && p.prods[v[1]] && v[1] > 0) sm.push(p.prods[v[1]] + '부터'); it.append(el('small', '', sm.join(' · '))); grid.append(it); });
+      items.forEach(({ c, v }) => { const it = el('div', 'lu-item' + (ME.test(c.n) && MINE() ? ' me' : '')); it.style.setProperty('--gc', GC[c.g] || '#94a3b8'); it.append(el('b', '', v[0]), el('span', '', c.n)); const sm = [c.g]; if (p.prods && p.prods[v[1]] && v[1] > 0) sm.push(p.prods[v[1]] + '부터'); it.append(el('small', '', sm.join(' · '))); grid.append(it); });
       box.append(grid);
     });
     return box;
@@ -293,9 +294,10 @@
     const state = root.__lu || (root.__lu = { v: 'mx', q: '', k: '', s: 'g', g: '', lim: 150, pg: 0, pgk: 0, reg: {}, rc: '' });
     const rerender = () => window.renderLineup(root, D);
     const wrap = el('div', 'lu');
-    wrap.append(meCards(D));
+    if (MINE()) wrap.append(meCards(D));
     const seg = el('div', 'lu-seg');
     [['mx', '채널 × 플랫폼 비교'], ['rg', '방송구역별 번호'], ['pl', '라인업 전체 보기']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.v === k)); b.addEventListener('click', () => { state.v = k; rerender(); }); seg.append(b); });
+    if (window.pnMineBtn) seg.append(window.pnMineBtn());
     wrap.append(seg);
     wrap.append(state.v === 'mx' ? matrix(D, state, rerender) : state.v === 'rg' ? byRegion(D, state, rerender) : byPlat(D, state, rerender));
     root.replaceChildren(wrap);

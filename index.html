@@ -415,6 +415,8 @@
   #app .lu-mesum { background: var(--card) !important; border-top: 2px solid var(--ink) !important; }
   #app .lu-mesum-h h3 { font-family: var(--serif); font-weight: 700; }
   #lineupTab { --lu-accent: var(--ink); }
+  .mine-btn { font: inherit; font-size: .84em; font-weight: 700; padding: .45em .85em; border: 1px dashed var(--line); border-radius: 3px; background: transparent; color: var(--ink2); cursor: pointer; margin-left: auto; flex: none; }
+  .mine-btn[aria-pressed="true"] { border-style: solid; border-color: #b08d57; color: #8a6a35; background: color-mix(in srgb, #b08d57 10%, transparent); }
   #financeTab { --fx-accent: var(--navy); }
   /* lock */
   .lock { background: var(--navy); }
@@ -777,6 +779,18 @@
     window.scrollTo({ top: 0 });
   }
   window.__go = go;
+  /* 우리 회사(재능방송) 표시는 기본 숨김 — 버튼을 눌렀을 때만 이 화면에서 잠시 표시(저장하지 않음) */
+  window.pnMineBtn = () => {
+    const b = el('button', 'mine-btn'); b.type = 'button';
+    const sync = () => { const on = document.body.classList.contains('mine'); b.textContent = on ? '재능방송 숨기기' : '재능방송 보기'; b.setAttribute('aria-pressed', String(on)); };
+    b.addEventListener('click', () => {
+      document.body.classList.toggle('mine');
+      if (FIN && window.renderFinance) window.renderFinance($('finance'), FIN);
+      if (LU && window.renderLineup) window.renderLineup($('lineup'), LU);
+      if (IX && window.renderRatings) window.renderRatings($('rating'), IX.ratings);
+    });
+    sync(); return b;
+  };
   document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => go(b.dataset.tab)));
   if (ls.get('pn-big') === '1') { document.body.classList.add('big'); $('bigBtn').setAttribute('aria-pressed', 'true'); }
   window.addEventListener('scroll', () => { const t = $('totop'); if (t) t.classList.toggle('on', window.scrollY > 600); }, { passive: true });
