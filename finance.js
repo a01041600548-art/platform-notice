@@ -655,11 +655,27 @@
     box.append(media);
     const ctl = el('div', 'rk-ctl');
     const lab = (t, inp) => { const l = el('label'); l.append(t, inp); ctl.append(l); return inp; };
-    const base = data.filter((c) => !state.rmd || c.media === state.rmd);
+    const SOLO = /^(개별|IPTV$|홈쇼핑$|종합편성$|보도전문$|공동체라디오$|중앙지상파$)/;
+    const grouped = (list) => {
+      const g = new Map(); const out = [];
+      list.forEach((c) => {
+        if (!c.group || SOLO.test(c.group)) { out.push(c); return; }
+        const key = c.media + '|' + c.group;
+        if (!g.has(key)) { const o = { id: 'G-' + key, name: c.group + ' 합산', full: c.group, media: c.media, group: '계열 합산', size: '', y: {}, members: [] }; g.set(key, o); out.push(o); }
+        const o = g.get(key); o.members.push(c);
+        [Y, P].forEach((yy) => { const src = c.y[yy] || {}; const dst = o.y[yy] || (o.y[yy] = {}); Object.entries(src).forEach(([k, val]) => { if (typeof val === 'number') dst[k] = (dst[k] || 0) + val; }); });
+      });
+      out.forEach((o) => { if (o.members) o.size = o.members.length + '개사'; });
+      return out;
+    };
+    const ub = el('div', 'rk-media rk-unit'); [['co', '회사별'], ['grp', '계열 합산 (MSO·PP계열·지역MBC 등)']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.ru === k)); b.addEventListener('click', () => { state.ru = k; rerender(); }); ub.append(b); });
+    box.append(ub);
+    const base0 = data.filter((c) => !state.rmd || c.media === state.rmd);
+    const base = state.ru === 'grp' ? grouped(base0) : base0;
     const has = (k) => base.filter((c) => { const x = mval(c, Y, k); return x != null && x !== 0; }).length;
     const ms = lab('순위 항목', el('select'));
-    RKG.forEach(([g, xs]) => { const og = el('optgroup'); og.label = g; xs.forEach(([k, l]) => { const n = has(k); if (!n) return; og.append(new Option(l + ' · ' + n + '곳', k)); }); if (og.children.length) ms.append(og); });
-    if (!ms.querySelector('option[value="' + state.rm + '"]')) state.rm = 'rev';
+    RKG.forEach(([g, xs]) => { const og = el('optgroup'); og.label = g; xs.forEach(([k, l]) => { const n = has(k); const op = new Option(n ? l + ' · ' + n + '곳' : l + ' · 이 매체는 공표집 항목 없음', k); op.disabled = !n; og.append(op); }); ms.append(og); });
+    if (!has(state.rm)) state.rm = has('brev') ? 'brev' : 'rev';
     ms.value = state.rm;
     ms.addEventListener('change', () => { state.rm = ms.value; rerender(); });
     const gs = lab('세부 구분', el('select')); gs.append(new Option('전체', '')); [...new Set(base.map((c) => c.group).filter(Boolean))].sort().forEach((g) => gs.append(new Option(g, g))); gs.value = state.rgr;
@@ -702,12 +718,13 @@
       const va = el('td', '', fmt(r.a)); if (r.a < 0) va.classList.add('fx-neg');
       const dd = el('td'); if (isP) dd.textContent = r.b == null ? '—' : ((r.a - r.b >= 0 ? '▲' : '▼') + Math.abs(r.a - r.b).toFixed(1) + '%p'); else { dd.append(chg(r.a, r.b)); dd.append(el('small', 'fx-k', (r.a - r.b >= 0 ? '+' : '') + money(r.a - r.b))); }
       tr.append(rk, nm, va, bar, el('td', '', fmt(r.b)), dd, el('td', '', isP || !total ? '' : (r.a / total * 100).toFixed(1) + '%'));
-      tr.addEventListener('click', () => openCo(r.c));
+      tr.addEventListener('click', () => openCo(r.c.members ? (r.c.members.find((m) => v(m, Y, 'asset')) || r.c.members[0]) : r.c));
       tb.append(tr);
     });
     t.append(tb); tw.append(t);
     if (!shown.length) box.append(el('p', 'fx-empty', '조건에 맞는 회사가 없습니다.')); else box.append(tw);
     if (shown.length > state.rlim) { const more = el('button', 'fx-close', `더 보기 (${shown.length - state.rlim}곳 더)`); more.type = 'button'; more.addEventListener('click', () => { state.rlim += 50; rerender(); }); box.append(more); }
+    if (['asset', 'debt', 'equity', 'debtr'].includes(k) && (!state.rmd || state.rmd === 'SO') && state.ru !== 'grp') box.append(el('p', 'fx-note', '※ 공표집에서 MSO 계열 SO(LG·딜라이브·SKB·HCN·CMB)는 자산·부채·자본이 계열 대표법인(본사)에만 기재되고 개별 SO 칸은 \'-\'로 공표됩니다. 위의 \'계열 합산\'을 누르면 MSO 단위로 비교할 수 있습니다.'));
     box.append(el('p', 'fx-note', '금액 단위는 억·조(공표집 백만원 기준 환산) · 매출·손익은 2025년 실적, 전년(2024년) 대비 · 영업이익률 = 영업손익 ÷ 매출액 · IPTV 3사 손익·자산은 통신 등 방송 외 사업이 포함된 회사 전체 수치입니다.'));
     return box;
   }
@@ -715,7 +732,7 @@
   window.renderFinance = function (root, raw) {
     addStyle();
     const data = Array.isArray(raw) ? raw : raw.companies; GEN = Array.isArray(raw) ? null : raw.genre;
-    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {}, cm: 'corp', cp: '', gf: '', cs: 'so', chlimit: 60, rm: 'brev', rmd: 'PP', rgr: '', rsz: '', ro: 'val', rq: '', rlim: 50 });
+    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {}, cm: 'corp', cp: '', gf: '', cs: 'so', chlimit: 60, rm: 'brev', rmd: 'PP', rgr: '', rsz: '', ro: 'val', rq: '', rlim: 50, ru: 'co' });
     const rerender = () => window.renderFinance(root, raw); state.redraw = rerender;
     const wrap = el('div', 'fx');
     const seg = el('div', 'fx-seg');
