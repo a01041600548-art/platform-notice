@@ -150,6 +150,7 @@
   .fx-chgl { display: flex; flex-wrap: wrap; gap: .4em; }
   @media (max-width: 720px) { .sv { padding: .9em; } .sv-tiles { grid-template-columns: 1fr 1fr; } .sv-tile b { font-size: 1.35em; } .sv-tile b.t { font-size: 1.05em; } }
 
+  .rk-gn { flex-wrap: wrap; } .rk-gl { font-size: .82em; font-weight: 800; color: var(--fx-muted); align-self: center; margin-right: .3em; } .rk-chs { display: block; color: var(--fx-accent); font-weight: 700; }
   .rk-ctl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13em), 1fr)); gap: .6em; }
   .rk-ctl label { display: flex; flex-direction: column; gap: .25em; font-size: .82em; font-weight: 800; color: var(--fx-muted); }
   .rk-ctl select, .rk-ctl input { font: inherit; font-size: 1.12em; font-weight: 700; min-height: 48px; padding: 0 .9em; border-radius: 12px; border: 2px solid var(--fx-line); background: var(--fx-card); color: var(--fx-ink); min-width: 0; }
@@ -633,11 +634,12 @@
     ['PP·지상파 매출', [['progsupply', '프로그램제공매출 (플랫폼에서 받은 사용료)'], ['ad', '광고매출'], ['sponsor', '협찬매출'], ['progsale', '프로그램판매매출'], ['hsrev', '홈쇼핑방송매출'], ['retrans', '재송신매출 (지상파)'], ['tvfee', 'TV수신료 (KBS)']]],
     ['플랫폼 매출', [['subfee', '수신료매출 합계'], ['basicfee', '기본채널 수신료'], ['payfee', '유료채널 수신료'], ['vodfee', 'VOD 수신료'], ['hsfee', '홈쇼핑 송출수수료'], ['install', '설치·가입 매출']]],
     ['플랫폼 → 콘텐츠 지급', [['ppfee', 'PP 사용료 지급 (기본+유료)'], ['basicprog', '기본채널 사용료'], ['payprog', '유료채널 사용료'], ['vodprog', 'VOD 사용료'], ['retranscost', '지상파 재송신비용'], ['progfee', '프로그램사용료 전체 (재송신 포함)'], ['ppshare', 'PP 사용료 ÷ 수신료(%)']]],
+    ['채널평가 투자비 (PP)', [['inv', '콘텐츠 투자비 (제작비+구입비)'], ['invr', '투자비 비율 (투자비 ÷ 제공매출+판매매출, %)']]],
     ['비용', [['cogs', '방송사업비용'], ['progcost', '방송프로그램비용'], ['prodcost', '제작비'], ['buycost', '프로그램 구입비'], ['hscost', '홈쇼핑방송비용'], ['labor', '인건비'], ['fund', '방송통신발전기금']]],
     ['재무구조', [['asset', '자산총계'], ['debt', '부채총계'], ['equity', '자본총계'], ['debtr', '부채비율(%)']]],
   ];
   const RKM = RKG.flatMap(([, xs]) => xs);
-  const PCT = new Set(['opm', 'netm', 'ppshare', 'debtr']);
+  const PCT = new Set(['opm', 'netm', 'ppshare', 'debtr', 'invr']);
   const ratio = (a, b) => (b ? a / b * 100 : null);
   const mval = (c, y, k) => {
     if (k === 'opm') return ratio(v(c, y, 'op'), v(c, y, 'rev'));
@@ -645,6 +647,8 @@
     if (k === 'ppshare') return ratio(ppf(c, y), v(c, y, 'subfee'));
     if (k === 'debtr') return v(c, y, 'equity') > 0 ? ratio(v(c, y, 'debt'), v(c, y, 'equity')) : null;
     if (k === 'ppfee') return ppf(c, y);
+    if (k === 'inv') { const x = (v(c, y, 'prodcost') || 0) + (v(c, y, 'buycost') || 0); return x || null; }
+    if (k === 'invr') { const x = (v(c, y, 'prodcost') || 0) + (v(c, y, 'buycost') || 0), d = (v(c, y, 'progsupply') || 0) + (v(c, y, 'progsale') || 0); return x && d ? x / d * 100 : null; }
     return v(c, y, k);
   };
   function ranking(data, state, rerender, openCo) {
@@ -670,7 +674,12 @@
     };
     const ub = el('div', 'rk-media rk-unit'); [['co', '회사별'], ['grp', '계열 합산 (MSO·PP계열·지역MBC 등)']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.ru === k)); b.addEventListener('click', () => { state.ru = k; rerender(); }); ub.append(b); });
     box.append(ub);
-    const base0 = data.filter((c) => !state.rmd || c.media === state.rmd);
+    const GN = (GEN && GEN.genres) || ['종교', '영화', '해외드라마', '국내드라마', '음악', '스포츠', '시사·경제', '교양·생활정보', '예능·오락', '취미·레저', '어린이·교육', '기타'];
+    const gb = el('div', 'rk-media rk-gn'); gb.append(el('span', 'rk-gl', '평가장르(채널군)'));
+    ['', ...GN].forEach((g) => { const b = el('button', '', g || '전체'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.rgn === g)); b.addEventListener('click', () => { state.rgn = g; if (g) { state.rmd = 'PP'; state.ru = 'co'; } rerender(); }); gb.append(b); });
+    box.append(gb);
+    const inGn = (c) => (c.ch || []).filter((x) => x.gn === state.rgn);
+    const base0 = data.filter((c) => (!state.rmd || c.media === state.rmd) && (!state.rgn || inGn(c).length));
     const base = state.ru === 'grp' ? grouped(base0) : base0;
     const has = (k) => base.filter((c) => { const x = mval(c, Y, k); return x != null && x !== 0; }).length;
     const ms = lab('순위 항목', el('select'));
@@ -700,7 +709,7 @@
     const me = rows.find((r) => r.c.name === ME);
     const sum = el('div', 'rk-sum');
     const tile = (lbl, val, sub) => { const c = el('div', 'fx-card'); c.append(el('span', 'fx-k', lbl), el('div', 'fx-big' + (String(val).length > 7 ? ' sm' : ''), val)); if (sub) { const s2 = el('span', 'fx-k'); if (typeof sub === 'string') s2.textContent = sub; else s2.append(sub); c.append(s2); } sum.append(c); };
-    tile('대상 회사', rows.length + '개사', (state.rmd || '전체 매체') + (state.rgr ? ' · ' + state.rgr : ''));
+    tile('대상 회사', rows.length + '개사', (state.rmd || '전체 매체') + (state.rgn ? ' · ' + state.rgn + ' 채널 보유' : '') + (state.rgr ? ' · ' + state.rgr : ''));
     if (!isP) { const s3 = el('span'); s3.append('2024년 ' + money(totalP) + ' ', chg(total, totalP)); tile('합계', money(total), s3); }
     if (rows[0]) tile('1위', rows[0].c.name, isP ? rows[0].a.toFixed(1) + '%' : money(rows[0].a));
     if (me) tile('재능방송 순위', me.rank + '위', (isP ? me.a.toFixed(1) + '%' : money(me.a)) + (total ? ' · 비중 ' + (me.a / total * 100).toFixed(2) + '%' : ''));
@@ -714,6 +723,7 @@
       const tr = el('tr', 'click' + (r.c.name === ME ? ' me' : ''));
       const rk = el('td', 'rk'); rk.append(el('i', '', r.rank));
       const nm = el('td', 'nm'); nm.append(r.c.name, el('small', '', [r.c.media, r.c.group, r.c.size].filter(Boolean).join(' · ')));
+      if (state.rgn) { const cs = inGn(r.c).map((x) => x.n); const all = (r.c.ch || []).length; nm.append(el('small', 'rk-chs', state.rgn + ': ' + cs.join(', ') + (all > cs.length ? ` (전체 ${all}개 채널 중)` : ''))); }
       const bar = el('td', 'bar'); const sp = el('span', r.a < 0 ? 'neg' : ''); sp.style.width = Math.max(2, Math.abs(r.a) / maxA * 100) + '%'; bar.append(sp);
       const va = el('td', '', fmt(r.a)); if (r.a < 0) va.classList.add('fx-neg');
       const dd = el('td'); if (isP) dd.textContent = r.b == null ? '—' : ((r.a - r.b >= 0 ? '▲' : '▼') + Math.abs(r.a - r.b).toFixed(1) + '%p'); else { dd.append(chg(r.a, r.b)); dd.append(el('small', 'fx-k', (r.a - r.b >= 0 ? '+' : '') + money(r.a - r.b))); }
@@ -725,6 +735,7 @@
     if (!shown.length) box.append(el('p', 'fx-empty', '조건에 맞는 회사가 없습니다.')); else box.append(tw);
     if (shown.length > state.rlim) { const more = el('button', 'fx-close', `더 보기 (${shown.length - state.rlim}개사 더)`); more.type = 'button'; more.addEventListener('click', () => { state.rlim += 50; rerender(); }); box.append(more); }
     if (['asset', 'debt', 'equity', 'debtr'].includes(k) && (!state.rmd || state.rmd === 'SO') && state.ru !== 'grp') box.append(el('p', 'fx-note', '※ 공표집에서 MSO 계열 SO(LG·딜라이브·SKB·HCN·CMB)는 자산·부채·자본이 계열 대표법인(본사)에만 기재되고 개별 SO 칸은 \'-\'로 공표됩니다. 위의 \'계열 합산\'을 누르면 MSO 단위로 비교할 수 있습니다.'));
+    if (state.rgn) box.append(el('p', 'fx-note', `※ 평가장르는 공표집·채널평가 채널군 기준입니다. ${state.rgn} 채널을 하나라도 가진 PP를 회사 단위로 비교하며, 여러 장르 채널을 가진 MPP는 회사 전체 금액입니다. 채널평가의 콘텐츠 투자비 항목(20점)은 채널군 안에서 ‘투자비 순위×4 + 투자비 비율 순위×6’으로 등급을 매기므로, 위 ‘채널평가 투자비’ 두 항목으로 순위를 보면 예상 위치를 가늠할 수 있습니다.`));
     box.append(el('p', 'fx-note', '금액 단위는 억·조(공표집 백만원 기준 환산) · 매출·손익은 2025년 실적, 전년(2024년) 대비 · 영업이익률 = 영업손익 ÷ 매출액 · IPTV 3사 손익·자산은 통신 등 방송 외 사업이 포함된 회사 전체 수치입니다.'));
     return box;
   }
@@ -732,7 +743,7 @@
   window.renderFinance = function (root, raw) {
     addStyle();
     const data = Array.isArray(raw) ? raw : raw.companies; GEN = Array.isArray(raw) ? null : raw.genre;
-    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {}, cm: 'corp', cp: '', gf: '', cs: 'so', chlimit: 60, rm: 'brev', rmd: 'PP', rgr: '', rsz: '', ro: 'val', rq: '', rlim: 50, ru: 'co' });
+    const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {}, cm: 'corp', cp: '', gf: '', cs: 'so', chlimit: 60, rm: 'brev', rmd: 'PP', rgr: '', rsz: '', ro: 'val', rq: '', rlim: 50, ru: 'co', rgn: '' });
     const rerender = () => window.renderFinance(root, raw); state.redraw = rerender;
     const wrap = el('div', 'fx');
     const seg = el('div', 'fx-seg');

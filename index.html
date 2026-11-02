@@ -490,6 +490,8 @@
     <button class="tab" role="tab" data-tab="financeTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/></svg><span class="tl">재산·채널법인</span><span class="ts">재산</span></button>
     <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg><span class="tl">채널 라인업</span><span class="ts">라인업</span></button>
     <button class="tab" role="tab" data-tab="calcTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 15h2M14 15h2M8 19h2M14 19h2"/></svg><span class="tl">대가산정 계산기</span><span class="ts">계산기</span></button>
+    <button class="tab" role="tab" data-tab="ratingTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg><span class="tl">시청률 예상순위</span><span class="ts">시청률</span></button>
+    <button class="tab" role="tab" data-tab="peopleTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg><span class="tl">대표·협회장</span><span class="ts">대표</span></button>
   </nav>
   <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false" aria-label="글자 크게"><span class="bl">가+ 글자 크게</span><span class="bs">가+</span></button><p>공지·언론 갱신<br><b id="stamp">—</b></p></div>
 </aside>
@@ -546,6 +548,10 @@
 
   <section class="pane off" id="calcTab"><section class="sec"><div><h2>콘텐츠 대가산정 계산기</h2><span class="muted">사업자를 고르면 공표된 산정 방식과 공표집 수신료 증감률이 모수로 자동 설정됩니다 · 입력값은 저장되지 않습니다</span></div>
     <div id="calc"><p class="muted">불러오는 중…</p></div></section></section>
+  <section class="pane off" id="ratingTab"><section class="sec"><div><h2>IPTV 시청률 · 장르별 예상순위</h2><span class="muted">각사가 공시한 2026년 분기별 채널 시청점유율로 채널평가 채널군 안의 예상 순위와 시청점유율 항목 등급을 계산합니다</span></div>
+    <div id="rating"><p class="muted">불러오는 중…</p></div></section></section>
+  <section class="pane off" id="peopleTab"><section class="sec"><div><h2>플랫폼 · 협회 대표</h2><span class="muted">IPTV · 위성 · 케이블 MSO · 개별 SO 대표이사와 유관 협회장</span></div>
+    <div id="people"><p class="muted">불러오는 중…</p></div></section></section>
 
   <button type="button" class="totop" id="totop" aria-label="맨 위로">▲ 맨 위로</button>
   <footer class="foot"><span>마지막 갱신: <b id="updated"></b></span><button class="btn ghost" id="logout" type="button">잠그기</button></footer>
@@ -555,6 +561,7 @@
 <script src="finance.js"></script>
 <script src="lineup.js"></script>
 <script src="calc.js"></script>
+<script src="insight.js"></script>
 <script>
 (() => {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {}); }
@@ -577,7 +584,12 @@
   const store = { get: () => { try { return localStorage.getItem(STORE); } catch (e) { return null; } }, set: (v) => { try { localStorage.setItem(STORE, v); } catch (e) {} }, del: () => { try { localStorage.removeItem(STORE); } catch (e) {} } };
 
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-  let PW = null, FIN = null, LU = null;
+  let PW = null, FIN = null, LU = null, IX = null;
+  async function loadInsight() {
+    if (IX || !PW) return;
+    try { IX = await decrypt(PW, 'insight.enc.json'); window.renderRatings($('rating'), IX.ratings); window.renderPeople($('people'), IX.people); }
+    catch (e) { ['rating', 'people'].forEach((k) => $(k).replaceChildren(el('p', 'muted', '자료를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'))); }
+  }
   async function loadLineup() {
     if (LU || !PW) return;
     try { LU = await decrypt(PW, 'lineup.enc.json'); window.renderLineup($('lineup'), LU); }
@@ -653,6 +665,8 @@
     strip('newsTab', '<b>언론보도 수집</b> ' + (m ? m[1] + '.' + Number(m[2]) + '.' + Number(m[3]) + ' ' + m[4] + ':' + m[5] : '—') + ' · 최근 기사 분야별 요약', stale);
     strip('financeTab', '<b>자료 기준</b> 2025년도 방송사업자 재산상황 공표집(2025년 실적·2024년 비교) · 2025 방송산업 실태조사 · 2024 채널평가 채널군', false);
     strip('calcTab', '<b>산정 기준</b> IPTV 3사 콘텐츠 사용료 산정 방안(2024.1) · KCTA 2026 SO 대가산정 기준 개정안(2026.8.13) · 실제 금액은 플랫폼 산정서로 확정', false);
+    strip('ratingTab', '<b>시청률 자료</b> KT 2026년 1~3분기 · LG유플러스 1~2분기 공시(보정 전 수치) · SK브로드밴드 미공개 · 채널군은 2026 PP채널평가 분류', false);
+    strip('peopleTab', '<b>확인일</b> 2026.11.2 · 각사 홈페이지 사업자 정보와 언론 보도 대조', false);
     strip('lineupTab', '<b>라인업 확인</b> 사업자별 기준일은 아래 표의 날짜 · 이용약관 우선, 약관 채널표가 그림인 곳은 홈페이지 기준', false);
   };
   function render() {
@@ -756,6 +770,7 @@
     document.body.classList.toggle('home', id === 'recent');
     if (id === 'financeTab') loadFinance();
     if (id === 'lineupTab') loadLineup();
+    if (id === 'ratingTab' || id === 'peopleTab') loadInsight();
     if (id === 'calcTab' && !window.__calcDone) { window.__calcDone = 1; (async () => { if (!FIN && PW) { try { FIN = await decrypt(PW, 'finance.enc.json'); window.renderFinance($('finance'), FIN); } catch (e) {} } window.renderCalc($('calc'), FIN); })(); }
     ls.set('pn-tab', id);
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
