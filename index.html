@@ -544,7 +544,7 @@
     </ul></details>
     <div id="lineup"><p class="muted">불러오는 중…</p></div></section></section>
 
-  <section class="pane off" id="calcTab"><section class="sec"><div><h2>콘텐츠 대가산정 계산기</h2><span class="muted">IPTV·케이블이 공표한 산정 방식으로 올해 사용료를 계산하고, 플랫폼 산정서를 검증합니다</span></div>
+  <section class="pane off" id="calcTab"><section class="sec"><div><h2>콘텐츠 대가산정 계산기</h2><span class="muted">사업자를 고르면 공표된 산정 방식과 공표집 수신료 증감률이 모수로 자동 설정됩니다 · 입력값은 저장되지 않습니다</span></div>
     <div id="calc"><p class="muted">불러오는 중…</p></div></section></section>
 
   <button type="button" class="totop" id="totop" aria-label="맨 위로">▲ 맨 위로</button>
@@ -756,7 +756,7 @@
     document.body.classList.toggle('home', id === 'recent');
     if (id === 'financeTab') loadFinance();
     if (id === 'lineupTab') loadLineup();
-    if (id === 'calcTab' && !window.__calcDone) { window.__calcDone = 1; window.renderCalc($('calc')); }
+    if (id === 'calcTab' && !window.__calcDone) { window.__calcDone = 1; (async () => { if (!FIN && PW) { try { FIN = await decrypt(PW, 'finance.enc.json'); window.renderFinance($('finance'), FIN); } catch (e) {} } window.renderCalc($('calc'), FIN); })(); }
     ls.set('pn-tab', id);
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
     window.scrollTo({ top: 0 });
