@@ -7,6 +7,7 @@
 <title>플랫폼 공지 모니터링</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap">
 <meta name="theme-color" content="#c2410c">
 <meta name="apple-mobile-web-app-title" content="플랫폼 공지">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -337,6 +338,106 @@
     .brand b { font-size: .92em; }
   }
   @media (max-width: 380px) { .brand small { display: none; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* ── v5 · Premium editorial ── */
+  :root { --bg: #f4f3ef; --card: #ffffff; --ink: #111827; --ink2: #5b6472; --line: #e4e1d8; --navy: #0d1b2e; --gold: #b08d57; --c0: #c2410c; --accent: #c2410c;
+    --shadow: none; --radius: 6px; --serif: "Noto Serif KR", "Nanum Myeongjo", serif; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0e1117; --card: #151a23; --ink: #eceae4; --ink2: #9aa1ac; --line: #262c37; --navy: #080c14; --gold: #c9a56b; } }
+  body { background: var(--bg); font-feature-settings: "tnum" 1; letter-spacing: -.005em; }
+  #app .tile, #app .hcard, #app .block, #app .search, #app .mcard, #app .site, #app details.basis, #app .asof, #app .hero, #app .stat,
+  #app .fx-card, #app .lu-card, #app .fx-tablewrap, #app .lu-wrap { border-radius: var(--radius) !important; box-shadow: none !important; }
+  #app .tile:hover, #app .hcard:hover { transform: none; box-shadow: none; border-color: var(--ink2); }
+  /* sidebar */
+  .side { background: var(--navy); }
+  .logo { border-radius: 4px; background: var(--c0); box-shadow: none; font-weight: 800; letter-spacing: .04em; }
+  .brand b { font-family: var(--serif); font-weight: 700; font-size: 1.08em; letter-spacing: -.01em; }
+  .brand small { letter-spacing: .02em; }
+  .navh { font-size: .68em; letter-spacing: .14em; color: #7d8796; }
+  .side .tab { border-radius: 4px; font-weight: 600; color: #b9c2cf; }
+  .side .tab[aria-selected="true"] { background: rgba(255,255,255,.06); box-shadow: inset 2px 0 0 var(--gold); color: #fff; }
+  .side .tab[aria-selected="true"] svg { color: var(--gold); }
+  .sbtn { border-radius: 4px; }
+  /* page titles */
+  .pane > .sec:first-child > div:first-child > h2, .hero h1 { font-family: var(--serif); font-weight: 700; letter-spacing: -.02em; }
+  .pane > .sec:first-child > div:first-child { padding-bottom: .9em; border-bottom: 1px solid var(--ink); gap: .35em !important; }
+  .sec > div:first-child > h2 { font-weight: 700; letter-spacing: -.02em; }
+  /* hero */
+  .hero { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--navy); padding: 1.8em 2em 1.7em; }
+  .hero::after { display: none; }
+  .hero .eyebrow { color: var(--gold); font-size: .78em; letter-spacing: .16em; font-weight: 700; }
+  .hero .eyebrow::before { content: 'DAILY BRIEFING · '; }
+  .stats { gap: 0; border-top: 1px solid var(--line); margin-top: 1em; padding-top: .9em; }
+  .stat { background: none !important; border: 0 !important; border-left: 1px solid var(--line) !important; border-radius: 0 !important; padding: .1em 1.4em; min-width: 9em; }
+  .stat:first-child { border-left: 0 !important; padding-left: 0; }
+  .stat span { font-size: .78em; letter-spacing: .02em; }
+  .stat b { font-size: 2em; font-weight: 600; letter-spacing: -.03em; color: var(--ink) !important; }
+  .stat:first-child b { color: var(--c0) !important; }
+  /* asof */
+  .asof { background: transparent !important; border: 0 !important; border-left: 0 !important; padding: 0 !important; font-size: .82em; color: var(--ink2); }
+  .asof::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #16a34a; display: inline-block; margin-right: .2em; }
+  .asof.warn::before { background: #d97706; }
+  #financeTab .asof::before, #lineupTab .asof::before { background: var(--gold); }
+  /* topic tiles: ledger grid */
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0 !important; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); overflow: hidden; }
+  #app .tile { border: 0 !important; border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; background: var(--card); min-height: 5.4em; padding: .9em 1.1em; }
+  #app .tile.key { border-color: var(--line) !important; }
+  #app .tiles .tile:nth-child(4n) { border-right: 0 !important; } #app .tiles .tile:nth-last-child(-n+4) { border-bottom: 0 !important; }
+  .tile p { font-weight: 600; font-size: .9em; color: var(--ink2); }
+  .tile .num { font-weight: 600; font-size: 2em; letter-spacing: -.03em; }
+  .tile .dot { width: .5em; height: .5em; border-radius: 1px; }
+  /* cards */
+  .hcard { border: 1px solid var(--line) !important; border-top: 2px solid var(--ink) !important; }
+  .htitle { font-weight: 700; }
+  .chk { background: transparent; border-left: 2px solid var(--c0); border-radius: 0; padding: .2em 0 .2em .8em; font-weight: 600; }
+  .chk::before, .c-chk::before { content: "영업 포인트  "; color: var(--c0); font-weight: 700; font-size: .85em; letter-spacing: .02em; }
+  .badge { border-radius: 3px; border-width: 1px; background: transparent; font-weight: 600; }
+  .go { border-radius: 3px; border-width: 1px; font-weight: 600; }
+  .go:hover { background: var(--ink); color: var(--card); }
+  .chip { border-radius: 3px !important; border-width: 1px !important; font-weight: 600; }
+  .chip[aria-pressed="true"] { background: var(--ink) !important; border-color: var(--ink) !important; color: var(--card) !important; }
+  .btn { border-radius: 4px; }
+  .input, .select { border-radius: 4px; border-width: 1px; }
+  .block-h { border-bottom: 1px solid var(--ink); }
+  .item { border-bottom-color: var(--line); }
+  .pill { border-width: 1px; border-radius: 3px; }
+  /* finance + lineup modules */
+  #app .fx-h h2 { border-left: 0; padding-left: 0; font-weight: 700; letter-spacing: -.02em; }
+  #app .fx-h { border-bottom: 1px solid var(--line); padding-bottom: .5em; }
+  #app .fx-seg { border-radius: 4px; background: transparent; border-bottom: 1px solid var(--line); padding: 0; gap: 0; width: 100%; }
+  #app .fx-seg button { border-radius: 0; min-height: 44px; font-weight: 600; border-bottom: 2px solid transparent; }
+  #app .fx-seg button[aria-pressed="true"] { background: transparent; box-shadow: none; color: var(--ink); border-bottom-color: var(--ink); }
+  #app .rk-media button { border-radius: 3px; border-width: 1px; font-weight: 600; }
+  #app .rk-media button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+  #app .rk-ctl select, #app .rk-ctl input { border-radius: 4px; border-width: 1px; }
+  #app .rk-t tr:nth-child(1) td.rk i, #app .rk-t tr:nth-child(2) td.rk i, #app .rk-t tr:nth-child(3) td.rk i { background: var(--navy); color: #fff; }
+  #app .rk-t td.rk i { border-radius: 3px; width: 1.8em; height: 1.8em; font-size: .9em; }
+  #app .rk-t td.bar span { background: var(--navy); opacity: .75; border-radius: 1px; height: 6px; }
+  #app .lu-mesum { background: var(--card) !important; border-top: 2px solid var(--ink) !important; }
+  #app .lu-mesum-h h3 { font-family: var(--serif); font-weight: 700; }
+  #lineupTab { --lu-accent: var(--ink); }
+  #financeTab { --fx-accent: var(--navy); }
+  /* lock */
+  .lock { background: var(--navy); }
+  .lock-box { border-radius: 6px; border-top: 3px solid var(--gold); }
+  .lock-box h1 { font-family: var(--serif); }
+  .logo.big { border-radius: 6px; }
+  @media (max-width: 960px) {
+    .side .tabs { background: var(--card); }
+    .side .tab { border-radius: 0; color: var(--ink2); font-weight: 600; }
+    .side .tab[aria-selected="true"] { background: transparent; color: var(--ink); box-shadow: inset 0 2px 0 var(--ink); }
+    .side .tab[aria-selected="true"] svg { color: var(--ink); }
+    .side .tabs { padding-top: 0; }
+  }
+  @media (max-width: 720px) {
+    .hero { padding: 1.1em 1.1em 1em; }
+    .hero h1 { font-size: 1.35em; }
+    .stat { padding: .1em .8em; min-width: 0; } .stat b { font-size: 1.4em; }
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #app .tile { padding: .6em .4em; min-height: 0; }
+    #app .tile { border-top: 0 !important; }
+    .tile .num { font-size: 1.35em; }
+    .pane > .sec:first-child > div:first-child > h2 { font-size: 1.35em; }
+  }
 </style>
 </head>
 <body>
@@ -537,7 +638,7 @@
     $('updated').textContent = D.updated;
 
     $('tiles').replaceChildren(...TOPICS.map((t, i) => {
-      const b = el('button', 'tile' + (i < 4 ? ' key' : '')); b.type = 'button'; b.style.borderTopColor = tcol(t);
+      const b = el('button', 'tile' + (i < 4 ? ' key' : '')); b.type = 'button'; 
       const p = el('p'); const d = el('i', 'dot'); d.style.background = tcol(t); p.append(d, t);
       const n = el('div', 'num', String(recent.filter((r) => r.topic === t).length)); n.append(el('small', '', '건'));
       b.append(p, n);

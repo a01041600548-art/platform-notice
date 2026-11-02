@@ -129,7 +129,7 @@
     const G = groupsOf(D);
     const mine = D.chans.filter((c) => ME.test(c.n) && Object.keys(c.c).length > 3);
     const card = el('div', 'lu-card lu-mesum');
-    const h = el('div', 'lu-mesum-h'); h.append(el('h3', '', '⭐ 재능방송 채널 번호'), el('span', '', '구역마다 다르면 대표 번호 · 아래 ▸ 를 누르면 구역별로 펼쳐집니다')); card.append(h);
+    const h = el('div', 'lu-mesum-h'); h.append(el('h3', '', '재능방송 채널 번호'), el('span', '', '구역별로 다르면 가장 많은 번호를 표시 · ▸ 구역별 보기')); card.append(h);
     const wrap = el('div', 'lu-wrap2'); const t = el('table', 'lu-mt'); const hr = el('tr'); hr.append(el('th', '', '라인업'));
     mine.forEach((c) => hr.append(el('th', '', c.n.replace(/^JEI\s*/, '')))); const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
