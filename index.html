@@ -287,6 +287,56 @@
     .foot { padding-bottom: .5em; }
   }
   @media (max-width: 360px) { .brand small { display: none; } .side .tab { font-size: .68em; } }
+
+  /* ── v4 · 공식 포털 마감 ── */
+  .upd { display: inline-flex; align-items: center; gap: 6px; font-size: .78em; font-weight: 700; color: #cbd5e1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); padding: 5px 10px; border-radius: 999px; white-space: nowrap; margin: 0 8px; }
+  .upd i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+  .upd.stale i { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.25); }
+  .upd.stale { color: #fde68a; }
+  .side .upd { display: none; }
+  .bs { display: none; }
+  .asof { display: flex; flex-wrap: wrap; gap: .3em .6em; align-items: center; font-size: .86em; color: var(--ink2); background: var(--card); border: 1px solid var(--line); border-left: 3px solid #22c55e; border-radius: 10px; padding: .55em .9em; line-height: 1.5; }
+  .asof b { color: var(--ink); font-weight: 800; }
+  .asof.warn { border-left-color: #f59e0b; } .asof em { color: #b45309; font-style: normal; font-weight: 800; }
+  #financeTab .asof, #lineupTab .asof { border-left-color: #64748b; }
+  .pane > .sec:first-child > div:first-child > h2 { letter-spacing: -.035em; }
+  @media (max-width: 960px) {
+    .side .upd { display: inline-flex; margin: 0; }
+    .bl { display: none; } .bs { display: inline; }
+    .sbtn { min-width: 40px; padding: 0 .7em; }
+    .brand small { color: #94a3b8; }
+  }
+  @media (max-width: 720px) {
+    body { font-size: 15.5px; }
+    main.wrap { gap: 1.15em; padding-top: 14px; }
+    .hero { padding: 1em 1.05em; gap: .35em; }
+    .hero .eyebrow { font-size: .78em; }
+    .hero h1 { font-size: 1.3em; }
+    .hero .lede { font-size: .9em; line-height: 1.55; }
+    .stats { gap: .45em; margin-top: .35em; }
+    .stat { padding: .5em .65em; border-radius: 10px; } .stat span { font-size: .74em; } .stat b { font-size: 1.15em; }
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4em; }
+    .tile { padding: .55em .5em; min-height: 0; border-radius: 10px; gap: .15em; align-items: center; text-align: center; }
+    .tile p { font-size: .72em; justify-content: center; line-height: 1.25; gap: .3em; word-break: keep-all; }
+    .tile p .dot { display: none; }
+    .tile .num { font-size: 1.35em; margin-top: .1em; }
+    .tile .num small { display: none; }
+    .tile { border-top: 3px solid var(--line); }
+    .sec > div:first-child > h2 { font-size: 1.12em; }
+    .pane > .sec:first-child > div:first-child > h2 { font-size: 1.28em; }
+    .sec > div:first-child > .muted { font-size: .86em; }
+    .asof { font-size: .8em; padding: .5em .75em; }
+    .hcard { padding: .85em .9em; } .htitle { font-size: .98em; }
+    .chk { font-size: .88em; }
+    .go { font-size: .82em; padding: .3em .75em; }
+    .block { padding: .1em .85em; }
+    .c-title { font-size: .97em; } .c-sum, .c-chk { font-size: .88em; }
+    .badge { font-size: .78em; }
+    .site { padding: .75em .85em; gap: .35em; }
+    .upd { font-size: .7em; padding: 4px 8px; }
+    .brand b { font-size: .92em; }
+  }
+  @media (max-width: 380px) { .brand small { display: none; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -304,7 +354,8 @@
 
 <div class="shell off" id="app">
 <aside class="side">
-  <div class="brand"><span class="logo" aria-hidden="true">JEI</span><div><b>플랫폼영업 보조</b><small>재능방송 플랫폼사업팀</small></div></div>
+  <div class="brand"><span class="logo" aria-hidden="true">JEI</span><div><b>플랫폼영업 포털</b><small>재능방송 플랫폼사업팀</small></div></div>
+  <span class="upd" id="upd" title="공지·언론 자료 마지막 갱신"><i></i><span id="updTxt">—</span></span>
   <nav class="tabs" role="tablist" aria-label="메뉴">
     <div class="navh" role="presentation">공지 모니터링</div>
     <button class="tab" role="tab" data-tab="recent" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="tl">최근 1달 공지</span><span class="ts">공지</span></button>
@@ -315,7 +366,7 @@
     <button class="tab" role="tab" data-tab="financeTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/></svg><span class="tl">재산·채널법인</span><span class="ts">재산</span></button>
     <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg><span class="tl">채널 라인업</span><span class="ts">라인업</span></button>
   </nav>
-  <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false">가+ 글자 크게</button><p>마지막 갱신<br><b id="stamp">—</b></p></div>
+  <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false" aria-label="글자 크게"><span class="bl">가+ 글자 크게</span><span class="bs">가+</span></button><p>공지·언론 갱신<br><b id="stamp">—</b></p></div>
 </aside>
 <main class="wrap">
   <header class="hero">
@@ -427,7 +478,7 @@
       store.set(pw);
       $('lock').classList.add('off'); $('app').classList.remove('off');
       render();
-      $('stamp').textContent = $('updated').textContent || '—';
+      $('stamp').textContent = $('updated').textContent || '—'; window.__asof && window.__asof();
       window.__go(location.hash.slice(1) || (() => { try { return localStorage.getItem('pn-tab'); } catch (e) { return null; } })() || 'recent');
     } catch (e) {
       store.del();
@@ -458,6 +509,22 @@
   }
   const nItem = (r, wt) => item(r, wt ? badge(r.topic, tcol(r.topic)) : null, { group: r.group, plat: r.platform, sum: r.summary, chk: r.check, kind: 'notice' });
 
+
+  window.__asof = () => {
+    const u = String(D.updated || '');
+    const m = u.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+    const hrs = m ? (Date.now() - Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5])) / 3600e3 : 99;
+    const short = m ? Number(m[2]) + '.' + Number(m[3]) + ' ' + m[4] + ':' + m[5] : '—';
+    const stale = hrs > 30;
+    $('updTxt').textContent = short + (stale ? ' · 갱신 지연' : ' 갱신');
+    $('upd').classList.toggle('stale', stale);
+    const strip = (pane, html, warn) => { const p = $(pane); if (!p) return; let a = p.querySelector('.asof'); if (!a) { a = el('div', 'asof'); if (pane === 'recent') p.prepend(a); else { const head = p.querySelector('.sec > div:first-child') || p.firstElementChild; head.after(a); } } a.className = 'asof' + (warn ? ' warn' : ''); a.innerHTML = html; };
+    const notice = '<b>공지 수집</b> ' + (m ? m[1] + '.' + Number(m[2]) + '.' + Number(m[3]) + ' ' + m[4] + ':' + m[5] : '—') + ' · 매일 아침 8시 전 자동 갱신' + (stale ? ' · <em>최근 자동 갱신이 지연되었습니다</em>' : '');
+    ['recent', 'monthly', 'sitesTab'].forEach((id) => strip(id, notice, stale));
+    strip('newsTab', '<b>언론보도 수집</b> ' + (m ? m[1] + '.' + Number(m[2]) + '.' + Number(m[3]) + ' ' + m[4] + ':' + m[5] : '—') + ' · 최근 기사 분야별 요약', stale);
+    strip('financeTab', '<b>자료 기준</b> 2025년도 방송사업자 재산상황 공표집(2025년 실적·2024년 비교) · 2025 방송산업 실태조사 · 2024 채널평가 채널군', false);
+    strip('lineupTab', '<b>라인업 확인</b> 사업자별 기준일은 아래 표의 날짜 · 이용약관 우선, 약관 채널표가 그림인 곳은 홈페이지 기준', false);
+  };
   function render() {
     const cut = cutoff();
     const recent = D.notices.filter((r) => r.date >= cut);
@@ -470,7 +537,7 @@
     $('updated').textContent = D.updated;
 
     $('tiles').replaceChildren(...TOPICS.map((t, i) => {
-      const b = el('button', 'tile' + (i < 4 ? ' key' : '')); b.type = 'button';
+      const b = el('button', 'tile' + (i < 4 ? ' key' : '')); b.type = 'button'; b.style.borderTopColor = tcol(t);
       const p = el('p'); const d = el('i', 'dot'); d.style.background = tcol(t); p.append(d, t);
       const n = el('div', 'num', String(recent.filter((r) => r.topic === t).length)); n.append(el('small', '', '건'));
       b.append(p, n);

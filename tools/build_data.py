@@ -1,6 +1,6 @@
 """Encrypt the monitoring data for the public GitHub Pages site.
 
-Usage: python3 build_data.py <password> <notices.json> <monthly.json> <sites.json> <news.json> <out data.enc.json>
+Usage: python3 build_data.py <password> <notices.json> <monthly.json> <sites.json> <news.json> <out data.enc.json> [updated 'YYYY-MM-DD HH:MM' KST]
 AES-256-GCM, key from PBKDF2-HMAC-SHA256 (310,000 iterations, random 16-byte salt), random 12-byte IV.
 The page (index.html) decrypts the same format with WebCrypto.
 """
@@ -15,7 +15,7 @@ def main():
     pw, fn, fm, fs, fnews, out = sys.argv[1:7]
     load = lambda p: json.load(open(p, encoding='utf-8'))
     bundle = {
-        'updated': datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M'),
+        'updated': sys.argv[7] if len(sys.argv) > 7 else datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M'),
         'notices': load(fn), 'monthly': load(fm), 'sites': load(fs), 'news': load(fnews),
     }
     plain = json.dumps(bundle, ensure_ascii=False).encode('utf-8')

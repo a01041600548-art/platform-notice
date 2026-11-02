@@ -89,6 +89,7 @@
   .lu-mt th:first-child { text-align: left; }
   .lu-mt td { padding: .55em .7em; border-bottom: 1px solid var(--lu-line); vertical-align: middle; }
   .lu-mt td.lw { font-weight: 800; white-space: nowrap; }
+  @media (max-width: 720px) { .lu-mt { font-size: .9em; } .lu-mt td.lw { white-space: normal; } .lu-mt td, .lu-mt th { padding-left: .4em; padding-right: .4em; } .lu-mt td.n b { font-size: 1.2em; } }
   .lu-mt td.lw small { display: block; font-weight: 600; font-size: .78em; color: var(--lu-muted); margin-top: .15em; }
   .lu-mt td.n { text-align: right; white-space: nowrap; }
   .lu-mt td.n b { font-size: 1.35em; font-weight: 800; }
@@ -130,10 +131,11 @@
     const card = el('div', 'lu-card lu-mesum');
     const h = el('div', 'lu-mesum-h'); h.append(el('h3', '', '⭐ 재능방송 채널 번호'), el('span', '', '구역마다 다르면 대표 번호 · 아래 ▸ 를 누르면 구역별로 펼쳐집니다')); card.append(h);
     const wrap = el('div', 'lu-wrap2'); const t = el('table', 'lu-mt'); const hr = el('tr'); hr.append(el('th', '', '라인업'));
-    mine.forEach((c) => hr.append(el('th', '', c.n))); const th = el('thead'); th.append(hr); t.append(th);
+    mine.forEach((c) => hr.append(el('th', '', c.n.replace(/^JEI\s*/, '')))); const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
     G.forEach((gr) => {
-      const tr = el('tr'); const td0 = el('td', 'lw'); td0.append(tbadge(gr.p), document.createTextNode(' ' + gr.op)); if (gr.idx.length > 1) td0.append(el('small', '', '방송구역 ' + gr.idx.length + '곳')); tr.append(td0);
+      const tr = el('tr'); const td0 = el('td', 'lw'); td0.append(tbadge(gr.p), document.createTextNode(' ' + gr.op)); const pl = gr.idx.map((i) => D.plats[i]); const dt = pl.map((x) => x.date || '').sort().pop(); const srcK = pl.some((x) => /약관/.test(x.src || '')) ? '이용약관' : '홈페이지';
+      td0.append(el('small', '', [gr.idx.length > 1 ? '방송구역 ' + gr.idx.length + '곳' : '', srcK + (dt ? ' · ' + dt.slice(2).replace(/-/g, '.') : '')].filter(Boolean).join(' · '))); tr.append(td0);
       const details = [];
       mine.forEach((c) => {
         const vals = gr.idx.map((i) => ({ i, v: c.c[i] })).filter((x) => x.v);
