@@ -463,6 +463,31 @@
     #app .rk-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     #app .rk-sum > .fx-card { border-bottom: 1px solid var(--line) !important; }
   }
+
+  /* ── v6 · 모바일 하단바 더보기 ── */
+  .more-toggle { display: none; }
+  .more-backdrop { position: fixed; inset: 0; z-index: 48; background: rgba(15,23,42,.4); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  .more-backdrop.open { opacity: 1; pointer-events: auto; }
+  .more-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--card); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 30px rgba(15,23,42,.2); padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); max-height: 72vh; overflow-y: auto; transform: translateY(100%); transition: transform .25s ease; display: none; }
+  @media (min-width: 961px) { .more-sheet, .more-backdrop, .more-toggle { display: none !important; } }
+  @media (max-width: 960px) {
+    .more-sheet { display: block; }
+    .more-sheet.open { transform: translateY(0); }
+    .more-sheet::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 36px; height: 4px; border-radius: 2px; background: var(--line); }
+    .more-sheet-head { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; margin-bottom: 12px; }
+    .more-sheet-head b { font-size: 1.08em; font-weight: 800; }
+    .more-close { min-height: 36px; min-width: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink2); font-weight: 800; cursor: pointer; }
+    .sheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .more-sheet .tab.sheet-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 76px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink2); font-weight: 700; font-size: .92em; padding: .6em; }
+    .more-sheet .tab.sheet-tab svg { width: 24px; height: 24px; }
+    .more-sheet .tab.sheet-tab[aria-selected="true"] { border-color: var(--c0); color: var(--c0); background: color-mix(in srgb, var(--c0) 9%, var(--bg)); }
+    .more-sheet .tab.sheet-tab[aria-selected="true"] svg { color: var(--c0); }
+    .side .tab[data-more] { display: none !important; }
+    .more-toggle { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--ink2); font: inherit; font-size: .74em; font-weight: 800; cursor: pointer; }
+    .more-toggle svg { width: 22px; height: 22px; }
+    .more-toggle[aria-expanded="true"], .more-toggle[aria-pressed="true"] { background: color-mix(in srgb, var(--c0) 11%, transparent); color: var(--c0); }
+    .more-toggle[aria-expanded="true"] svg, .more-toggle[aria-pressed="true"] svg { color: var(--c0); }
+  }
 </style>
 </head>
 <body>
@@ -485,18 +510,29 @@
   <nav class="tabs" role="tablist" aria-label="메뉴">
     <div class="navh" role="presentation">공지 모니터링</div>
     <button class="tab" role="tab" data-tab="recent" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="tl">최근 1달 공지</span><span class="ts">공지</span></button>
-    <button class="tab" role="tab" data-tab="monthly" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h6"/></svg><span class="tl">월간 누적</span><span class="ts">월간</span></button>
-    <button class="tab" role="tab" data-tab="sitesTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span class="tl">대상 사이트</span><span class="ts">사이트</span></button>
+    <button class="tab" role="tab" data-tab="monthly" data-more="1" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h6"/></svg><span class="tl">월간 누적</span><span class="ts">월간</span></button>
+    <button class="tab" role="tab" data-tab="sitesTab" data-more="1" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span class="tl">대상 사이트</span><span class="ts">사이트</span></button>
     <div class="navh" role="presentation">시장 · 데이터</div>
     <button class="tab" role="tab" data-tab="newsTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg><span class="tl">언론보도</span><span class="ts">뉴스</span></button>
     <button class="tab" role="tab" data-tab="financeTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/></svg><span class="tl">재산·채널법인</span><span class="ts">재산</span></button>
     <button class="tab" role="tab" data-tab="lineupTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg><span class="tl">채널 라인업</span><span class="ts">라인업</span></button>
     <button class="tab" role="tab" data-tab="calcTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 15h2M14 15h2M8 19h2M14 19h2"/></svg><span class="tl">대가산정 계산기</span><span class="ts">계산기</span></button>
-    <button class="tab" role="tab" data-tab="ratingTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg><span class="tl">시청률 예상순위</span><span class="ts">시청률</span></button>
-    <button class="tab" role="tab" data-tab="peopleTab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg><span class="tl">대표·협회장</span><span class="ts">대표</span></button>
+    <button class="tab" role="tab" data-tab="ratingTab" data-more="1" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg><span class="tl">시청률 예상순위</span><span class="ts">시청률</span></button>
+    <button class="tab" role="tab" data-tab="peopleTab" data-more="1" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg><span class="tl">대표·협회장</span><span class="ts">대표</span></button>
+    <button type="button" class="more-toggle" id="moreToggle" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span class="tl">더보기</span><span class="ts">더보기</span></button>
   </nav>
   <div class="side-foot"><button type="button" class="sbtn" id="bigBtn" aria-pressed="false" aria-label="글자 크게"><span class="bl">가+ 글자 크게</span><span class="bs">가+</span></button><p>공지·언론 갱신<br><b id="stamp">—</b></p></div>
 </aside>
+<div class="more-backdrop" id="moreBackdrop"></div>
+<div class="more-sheet" id="moreSheet" role="menu" aria-label="더보기 메뉴">
+  <div class="more-sheet-head"><b>더보기</b><button type="button" class="more-close" id="moreClose" aria-label="닫기">✕</button></div>
+  <div class="sheet-grid">
+    <button class="tab sheet-tab" role="menuitem" data-tab="monthly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h3M8 18h6"/></svg><span>월간 누적</span></button>
+    <button class="tab sheet-tab" role="menuitem" data-tab="sitesTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>대상 사이트</span></button>
+    <button class="tab sheet-tab" role="menuitem" data-tab="ratingTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg><span>시청률 예상순위</span></button>
+    <button class="tab sheet-tab" role="menuitem" data-tab="peopleTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg><span>대표·협회장</span></button>
+  </div>
+</div>
 <main class="wrap">
   <header class="hero">
     <span class="eyebrow">오늘의 플랫폼 공지 브리핑</span>
@@ -764,12 +800,23 @@
   document.querySelectorAll('.qk').forEach((c) => c.addEventListener('click', () => { $('q').value = c.dataset.q; search(); }));
 
   const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const MORE_IDS = ['monthly', 'sitesTab', 'ratingTab', 'peopleTab'];
+  function setMore(open) {
+    const sheet = $('moreSheet'), back = $('moreBackdrop'), tog = $('moreToggle');
+    if (!sheet || !back || !tog) return;
+    sheet.classList.toggle('open', open);
+    back.classList.toggle('open', open);
+    tog.setAttribute('aria-expanded', String(open));
+  }
   function go(id) {
-    const b = document.querySelector('.tab[data-tab="' + id + '"]') || document.querySelector('.tab');
+    const matches = document.querySelectorAll('.tab[data-tab="' + id + '"]');
+    const b = matches[0] || document.querySelector('.tab[data-tab]');
     id = b.dataset.tab;
-    document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('.tab[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x.dataset.tab === id)));
     document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('off', p.id !== id));
     document.body.classList.toggle('home', id === 'recent');
+    const tog = $('moreToggle'); if (tog) tog.setAttribute('aria-pressed', String(MORE_IDS.includes(id)));
+    setMore(false);
     if (id === 'financeTab') loadFinance();
     if (id === 'lineupTab') loadLineup();
     if (id === 'ratingTab' || id === 'peopleTab') loadInsight();
@@ -779,6 +826,10 @@
     window.scrollTo({ top: 0 });
   }
   window.__go = go;
+  const moreToggle = $('moreToggle'), moreBackdrop = $('moreBackdrop'), moreClose = $('moreClose');
+  if (moreToggle) moreToggle.addEventListener('click', () => setMore(!$('moreSheet').classList.contains('open')));
+  if (moreBackdrop) moreBackdrop.addEventListener('click', () => setMore(false));
+  if (moreClose) moreClose.addEventListener('click', () => setMore(false));
   /* 우리 회사(재능방송) 표시는 기본 숨김 — 버튼을 눌렀을 때만 이 화면에서 잠시 표시(저장하지 않음) */
   window.pnMineBtn = () => {
     const b = el('button', 'mine-btn'); b.type = 'button';
