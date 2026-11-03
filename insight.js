@@ -38,7 +38,7 @@
   .ix-pp { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17em), 1fr)); gap: .6em; }
   .ix-p { border: 1px solid var(--line); border-radius: 4px; padding: .8em .9em; display: flex; flex-direction: column; gap: .25em; background: var(--card); }
   .ix-p .co { font-size: .84em; color: var(--ink2); font-weight: 700; }
-  .ix-p .nm { font-size: 1.25em; font-weight: 700; font-family: 'Noto Serif KR', serif; }
+  .ix-p .nm { font-size: 1.25em; font-weight: 800; letter-spacing: -.01em; }
   .ix-p .nm.unk { font-size: 1em; color: var(--ink2); font-family: inherit; }
   .ix-p .role { font-size: .84em; color: var(--ink2); }
   .ix-p .mt { font-size: .78em; color: var(--ink2); margin-top: .2em; } .ix-p .mt a { color: var(--ink2); }

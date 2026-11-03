@@ -7,7 +7,6 @@
 <title>플랫폼 공지 모니터링</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap">
 <meta name="theme-color" content="#c2410c">
 <meta name="apple-mobile-web-app-title" content="플랫폼 공지">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -340,9 +339,9 @@
   @media (max-width: 380px) { .brand small { display: none; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
   /* ── v5 · Premium editorial ── */
-  :root { --bg: #f4f3ef; --card: #ffffff; --ink: #111827; --ink2: #5b6472; --line: #e4e1d8; --navy: #0d1b2e; --gold: #b08d57; --c0: #c2410c; --accent: #c2410c;
-    --shadow: none; --radius: 6px; --serif: "Noto Serif KR", "Nanum Myeongjo", serif; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #0e1117; --card: #151a23; --ink: #eceae4; --ink2: #9aa1ac; --line: #262c37; --navy: #080c14; --gold: #c9a56b; } }
+  :root { --bg: #eef1f5; --card: #ffffff; --ink: #111827; --ink2: #55606f; --line: #dde3ea; --navy: #0c1a2b; --gold: #b8862f; --c0: #c81e3a; --accent: #c81e3a;
+    --shadow: 0 1px 2px rgba(15,23,42,.05), 0 6px 18px rgba(15,23,42,.07); --radius: 10px; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0b0f16; --card: #121722; --ink: #e7ebf1; --ink2: #9aa7b8; --line: #232b38; --navy: #070c14; --gold: #d9a94a; --c0: #e14a5f; --accent: #e14a5f; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35); } }
   body { background: var(--bg); font-feature-settings: "tnum" 1; letter-spacing: -.005em; }
   #app .tile, #app .hcard, #app .block, #app .search, #app .mcard, #app .site, #app details.basis, #app .asof, #app .hero, #app .stat,
   #app .fx-card, #app .lu-card, #app .fx-tablewrap, #app .lu-wrap { border-radius: var(--radius) !important; box-shadow: none !important; }
@@ -350,7 +349,7 @@
   /* sidebar */
   .side { background: var(--navy); }
   .logo { border-radius: 4px; background: var(--c0); box-shadow: none; font-weight: 800; letter-spacing: .04em; }
-  .brand b { font-family: var(--serif); font-weight: 700; font-size: 1.08em; letter-spacing: -.01em; }
+  .brand b { font-weight: 800; font-size: 1.08em; letter-spacing: -.01em; }
   .brand small { letter-spacing: .02em; }
   .navh { font-size: .68em; letter-spacing: .14em; color: #7d8796; }
   .side .tab { border-radius: 4px; font-weight: 600; color: #b9c2cf; }
@@ -358,14 +357,13 @@
   .side .tab[aria-selected="true"] svg { color: var(--gold); }
   .sbtn { border-radius: 4px; }
   /* page titles */
-  .pane > .sec:first-child > div:first-child > h2, .hero h1 { font-family: var(--serif); font-weight: 700; letter-spacing: -.02em; }
+  .pane > .sec:first-child > div:first-child > h2, .hero h1 { font-weight: 800; letter-spacing: -.025em; }
   .pane > .sec:first-child > div:first-child { padding-bottom: .9em; border-bottom: 1px solid var(--ink); gap: .35em !important; }
   .sec > div:first-child > h2 { font-weight: 700; letter-spacing: -.02em; }
   /* hero */
   .hero { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--navy); padding: 1.8em 2em 1.7em; }
   .hero::after { display: none; }
-  .hero .eyebrow { color: var(--gold); font-size: .78em; letter-spacing: .16em; font-weight: 700; }
-  .hero .eyebrow::before { content: 'DAILY BRIEFING · '; }
+  .hero .eyebrow { color: var(--gold); font-size: .82em; letter-spacing: .01em; font-weight: 700; }
   .stats { gap: 0; border-top: 1px solid var(--line); margin-top: 1em; padding-top: .9em; }
   .stat { background: none !important; border: 0 !important; border-left: 1px solid var(--line) !important; border-radius: 0 !important; padding: .1em 1.4em; min-width: 9em; }
   .stat:first-child { border-left: 0 !important; padding-left: 0; }
@@ -413,7 +411,7 @@
   #app .rk-t td.rk i { border-radius: 3px; width: 1.8em; height: 1.8em; font-size: .9em; }
   #app .rk-t td.bar span { background: var(--navy); opacity: .75; border-radius: 1px; height: 6px; }
   #app .lu-mesum { background: var(--card) !important; border-top: 2px solid var(--ink) !important; }
-  #app .lu-mesum-h h3 { font-family: var(--serif); font-weight: 700; }
+  #app .lu-mesum-h h3 { font-weight: 800; letter-spacing: -.01em; }
   #lineupTab { --lu-accent: var(--ink); }
   .mine-btn { font: inherit; font-size: .84em; font-weight: 700; padding: .45em .85em; border: 1px dashed var(--line); border-radius: 3px; background: transparent; color: var(--ink2); cursor: pointer; margin-left: auto; flex: none; }
   .mine-btn[aria-pressed="true"] { border-style: solid; border-color: #b08d57; color: #8a6a35; background: color-mix(in srgb, #b08d57 10%, transparent); }
@@ -421,7 +419,7 @@
   /* lock */
   .lock { background: var(--navy); }
   .lock-box { border-radius: 6px; border-top: 3px solid var(--gold); }
-  .lock-box h1 { font-family: var(--serif); }
+  .lock-box h1 { font-weight: 800; letter-spacing: -.02em; }
   .logo.big { border-radius: 6px; }
   @media (max-width: 960px) {
     .side .tabs { background: var(--card); }
@@ -537,7 +535,7 @@
   <header class="hero">
     <span class="eyebrow">오늘의 플랫폼 공지 브리핑</span>
     <h1>플랫폼 공지 모니터링</h1>
-    <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회 19곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 자동으로 갱신됩니다.</p>
+    <p class="lede">최근 1달(<b id="range"></b>) 동안 IPTV·MSO·개별SO·위성·협회·정부 20곳에 올라온 공지 <b id="total"></b>건을 주제별로 정리했습니다. 매일 아침 8시 전에 자동으로 갱신됩니다.</p>
     <div class="stats"><div class="stat"><span>최근 1달 공지</span><b id="sTotal">—</b></div><div class="stat"><span>핵심 이슈</span><b id="sKey">—</b></div><div class="stat"><span>업계 기사</span><b id="sNews">—</b></div></div>
   </header>
 
