@@ -15,11 +15,11 @@
   :root {
     --bg: #f7f6f2; --card: #ffffff; --ink: #1d1d1b; --ink2: #4a4a46; --line: #d9d6cc;
     --bad: #c2410c; --warn: #a16207; --ok: #15803d; --focus: #f59e0b;
-    --c0: #c2410c; --c1: #7c3aed; --c2: #2563eb; --c3: #be185d; --c4: #0f766e; --c5: #ca8a04; --c6: #4b5563; --c7: #6b7280;
+    --c0: #c2410c; --c1: #7c3aed; --c2: #2563eb; --c3: #be185d; --c4: #0f766e; --c5: #ca8a04; --c6: #4b5563; --c7: #6b7280; --c8: #4338ca;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #161614; --card: #22221f; --ink: #f3f2ee; --ink2: #c9c7bf; --line: #3d3c37;
-      --bad: #fb923c; --warn: #fbbf24; --ok: #4ade80; --c0: #fb923c; --c1: #a78bfa; --c2: #60a5fa; --c3: #f472b6; --c4: #2dd4bf; --c5: #facc15; --c6: #9ca3af; --c7: #a1a1aa; }
+      --bad: #fb923c; --warn: #fbbf24; --ok: #4ade80; --c0: #fb923c; --c1: #a78bfa; --c2: #60a5fa; --c3: #f472b6; --c4: #2dd4bf; --c5: #facc15; --c6: #9ca3af; --c7: #a1a1aa; --c8: #818cf8; }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--ink); }
@@ -376,10 +376,10 @@
   .asof.warn::before { background: #d97706; }
   #financeTab .asof::before, #lineupTab .asof::before { background: var(--gold); }
   /* topic tiles: ledger grid */
-  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0 !important; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); overflow: hidden; }
+  .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 0 !important; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); overflow: hidden; }
   #app .tile { border: 0 !important; border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; background: var(--card); min-height: 5.4em; padding: .9em 1.1em; }
   #app .tile.key { border-color: var(--line) !important; }
-  #app .tiles .tile:nth-child(4n) { border-right: 0 !important; } #app .tiles .tile:nth-last-child(-n+4) { border-bottom: 0 !important; }
+  #app .tiles .tile:nth-child(3n) { border-right: 0 !important; } #app .tiles .tile:nth-last-child(-n+3) { border-bottom: 0 !important; }
   .tile p { font-weight: 600; font-size: .9em; color: var(--ink2); }
   .tile .num { font-weight: 600; font-size: 2em; letter-spacing: -.03em; }
   .tile .dot { width: .5em; height: .5em; border-radius: 1px; }
@@ -602,7 +602,7 @@
 (() => {
   if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {}); }
 
-  const TOPICS = ['수신료·대가산정', '채널평가', '채널개편', '채널 종료·변경', '시청률', 'VOD', '지역채널 커머스', '기타 안내'];
+  const TOPICS = ['수신료·대가산정', '채널평가', '채널개편', '채널 종료·변경', '시청률', 'VOD', '지역채널 커머스', '기타 안내', '방미통위'];
   const KEY = TOPICS.slice(0, 4);
   const GROUPS = ['IPTV', 'MSO', '개별SO', '위성', '협회', '정부'];
   const CATS = ['IPTV', '케이블', '대형 MPP', '수신료 분쟁', '인사이동', '정책·규제'];
