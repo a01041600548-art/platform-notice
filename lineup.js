@@ -115,7 +115,18 @@
     .lu-t th.ch, .lu-t td.ch { min-width: 8.5em; }
     .lu-wrap { max-height: 70vh; }
     .lu-row > b { min-width: 100%; }
-  }`;
+  }
+  /* 가독성 보강 — 숫자가 많은 표를 더 쉽게 훑어볼 수 있도록 */
+  .lu-t tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--lu-ink) 2%, var(--lu-card)); }
+  .lu-t tbody tr:nth-child(even):hover td { background: color-mix(in srgb, var(--lu-ink) 4.5%, var(--lu-card)); }
+  .lu-t tr.me td { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--lu-accent) 25%, transparent); }
+  .lu-t tr.me td.ch { box-shadow: inset 4px 0 0 var(--lu-accent); }
+  .lu-t thead th { letter-spacing: .01em; }
+  .lu-t thead th .tb { font-size: .76em; }
+  .lu-leg { padding: .7em 0 0; border-top: 1px dashed var(--lu-line); margin-top: .2em; line-height: 1.7; }
+  .lu-leg i { margin-right: .15em; }
+  .lu-mecard, .lu-mesum { border: 1px solid color-mix(in srgb, var(--lu-accent) 22%, var(--lu-line)); }
+  @media (max-width: 720px) { .lu-leg { font-size: .78em; gap: .3em .8em; } }`;
   function addStyle() { if (document.getElementById('lu-style')) return; const s = el('style'); s.id = 'lu-style'; s.textContent = CSS; document.head.appendChild(s); }
   const tlabel = (p) => p.kind === '케이블' ? p.type : p.kind;
   const tbadge = (p) => { const b = el('span', 'tb', tlabel(p)); b.style.setProperty('--tc', TC[tlabel(p)] || '#64748b'); return b; };
