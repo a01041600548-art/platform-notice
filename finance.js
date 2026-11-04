@@ -206,9 +206,9 @@
   // ── 플랫폼 순위·사용료 ──
   const ppf = (c, y) => v(c, y, 'basicprog') + v(c, y, 'payprog');
   const MET = [
-    ['subfee', '수신료매출'], ['basicfee', '기본채널 수신료'], ['brev', '방송사업매출'], ['hsfee', '홈쇼핑 송출수수료'],
+    ['subfee', '수신료매출'], ['basicfee', '기본채널 수신료매출'], ['brev', '방송사업매출'], ['hsfee', '홈쇼핑 송출수수료'],
     ['pp', 'PP 프로그램사용료 (기본+유료)'], ['basicprog', '기본채널 프로그램사용료'], ['payprog', '유료채널 프로그램사용료'], ['vodprog', 'VOD 프로그램사용료'], ['retranscost', '지상파 재송신비용'],
-    ['r_pp', 'PP 사용료 ÷ 수신료 (%)'], ['r_basic', '기본채널 사용료 ÷ 기본채널 수신료 (%)'],
+    ['r_pp', 'PP 사용료 ÷ 수신료 (%)'], ['r_basic', '기본채널 사용료 ÷ 기본채널 수신료매출 (%)'],
   ];
   const RATIO = { r_pp: ['pp', 'subfee'], r_basic: ['basicprog', 'basicfee'] };
   const tot = (rows, y, k) => rows.reduce((t, c) => t + (k === 'pp' ? ppf(c, y) : v(c, y, k)), 0);
@@ -243,13 +243,13 @@
       c.append(top, el('div', 'fx-big', money(a)), el('span', 'fx-k', '2024년 ' + money(b) + ' · ' + (a >= b ? '+' : '') + money(a - b) + (note ? ' · ' + note : '')));
       g.append(c);
     };
-    card('수신료매출', 'subfee'); card('그중 기본채널 수신료', 'basicfee'); card('PP 프로그램사용료 (기본+유료)', 'pp'); card('그중 기본채널 사용료', 'basicprog');
+    card('수신료매출', 'subfee'); card('그중 기본채널 수신료매출', 'basicfee'); card('PP 프로그램사용료 (기본+유료)', 'pp'); card('그중 기본채널 사용료', 'basicprog');
     card('VOD 프로그램사용료', 'vodprog'); card('지상파 재송신비용', 'retranscost'); card('홈쇼핑 송출수수료', 'hsfee');
     box.append(h1, g);
     // 2) 매체별
     const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '매체별 수신료 대비 사용료'), el('span', '', '괄호 안은 전년 대비'));
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table'); const hr = el('tr');
-    ['매체', '수신료매출', '기본채널 수신료', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    ['매체', '수신료매출', '기본채널 수신료매출', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
     const cell = (a, b) => { const td = el('td', '', money(a)); const sm = el('small'); sm.append(chg(a, b)); td.append(sm); return td; };
     const rcell = (a, b) => { const td = el('td', '', a == null ? '—' : a.toFixed(1) + '%'); td.append(el('small', 'fx-k', b == null ? '' : '전년 ' + b.toFixed(1) + '% (' + (a - b >= 0 ? '+' : '') + (a - b).toFixed(1) + '%p)')); return td; };
@@ -443,7 +443,7 @@
       kv.append(box);
     };
     item('매출액', 'rev'); item('방송사업매출', 'brev'); item('영업손익', 'op'); item('당기순손익', 'net');
-    if (PLAT.includes(c.media)) { item('유료방송 수신료매출', 'subfee'); item('기본채널 수신료', 'basicfee'); item('유료채널 수신료', 'payfee'); item('VOD 수신료', 'vodfee'); item('홈쇼핑 송출수수료', 'hsfee'); item('설치·가입 매출', 'install'); item('방송프로그램사용료 전체(재송신 포함)', 'progfee'); item('기본채널 사용료', 'basicprog'); item('유료채널 사용료', 'payprog'); item('VOD 사용료', 'vodprog'); item('재송신 비용', 'retranscost'); }
+    if (PLAT.includes(c.media)) { item('유료방송 수신료매출', 'subfee'); item('기본채널 수신료매출', 'basicfee'); item('유료채널 수신료', 'payfee'); item('VOD 수신료', 'vodfee'); item('홈쇼핑 송출수수료', 'hsfee'); item('설치·가입 매출', 'install'); item('방송프로그램사용료 전체(재송신 포함)', 'progfee'); item('기본채널 사용료', 'basicprog'); item('유료채널 사용료', 'payprog'); item('VOD 사용료', 'vodprog'); item('재송신 비용', 'retranscost'); }
     else { item('프로그램제공매출(플랫폼 수입)', 'progsupply'); item('광고매출', 'ad'); item('협찬매출', 'sponsor'); item('프로그램판매', 'progsale'); item('홈쇼핑방송매출', 'hsrev'); item('제작비', 'prodcost'); item('구입비', 'buycost'); item('재송신매출', 'retrans'); item('TV수신료', 'tvfee'); item('홈쇼핑방송비용', 'hscost'); }
     item('방송사업비용', 'cogs'); item('방송프로그램비용', 'progcost');
     item('인건비', 'labor'); item('방송통신발전기금', 'fund'); item('자산총계', 'asset'); item('부채총계', 'debt'); item('자본총계', 'equity');
@@ -633,7 +633,7 @@
   const RKG = [
     ['손익', [['rev', '매출액'], ['brev', '방송사업매출'], ['op', '영업손익'], ['net', '당기순손익'], ['opm', '영업이익률(%)'], ['netm', '순이익률(%)']]],
     ['PP·지상파 매출', [['progsupply', '프로그램제공매출 (플랫폼에서 받은 사용료)'], ['ad', '광고매출'], ['sponsor', '협찬매출'], ['progsale', '프로그램판매매출'], ['hsrev', '홈쇼핑방송매출'], ['retrans', '재송신매출 (지상파)'], ['tvfee', 'TV수신료 (KBS)']]],
-    ['플랫폼 매출', [['subfee', '수신료매출 합계'], ['basicfee', '기본채널 수신료'], ['payfee', '유료채널 수신료'], ['vodfee', 'VOD 수신료'], ['hsfee', '홈쇼핑 송출수수료'], ['install', '설치·가입 매출']]],
+    ['플랫폼 매출', [['subfee', '수신료매출 합계'], ['basicfee', '기본채널 수신료매출'], ['payfee', '유료채널 수신료'], ['vodfee', 'VOD 수신료'], ['hsfee', '홈쇼핑 송출수수료'], ['install', '설치·가입 매출']]],
     ['플랫폼 → 콘텐츠 지급', [['ppfee', 'PP 사용료 지급 (기본+유료)'], ['basicprog', '기본채널 사용료'], ['payprog', '유료채널 사용료'], ['vodprog', 'VOD 사용료'], ['retranscost', '지상파 재송신비용'], ['progfee', '프로그램사용료 전체 (재송신 포함)'], ['ppshare', 'PP 사용료 ÷ 수신료(%)']]],
     ['채널평가 투자비 (PP)', [['inv', '콘텐츠 투자비 (제작비+구입비)'], ['invr', '투자비 비율 (투자비 ÷ 제공매출+판매매출, %)']]],
     ['비용', [['cogs', '방송사업비용'], ['progcost', '방송프로그램비용'], ['prodcost', '제작비'], ['buycost', '프로그램 구입비'], ['hscost', '홈쇼핑방송비용'], ['labor', '인건비'], ['fund', '방송통신발전기금']]],
