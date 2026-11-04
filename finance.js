@@ -243,19 +243,19 @@
       c.append(top, el('div', 'fx-big', money(a)), el('span', 'fx-k', '2024년 ' + money(b) + ' · ' + (a >= b ? '+' : '') + money(a - b) + (note ? ' · ' + note : '')));
       g.append(c);
     };
-    card('수신료매출', 'subfee'); card('PP 프로그램사용료 (기본+유료)', 'pp'); card('그중 기본채널 사용료', 'basicprog');
+    card('수신료매출', 'subfee'); card('그중 기본채널 수신료', 'basicfee'); card('PP 프로그램사용료 (기본+유료)', 'pp'); card('그중 기본채널 사용료', 'basicprog');
     card('VOD 프로그램사용료', 'vodprog'); card('지상파 재송신비용', 'retranscost'); card('홈쇼핑 송출수수료', 'hsfee');
     box.append(h1, g);
     // 2) 매체별
     const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '매체별 수신료 대비 사용료'), el('span', '', '괄호 안은 전년 대비'));
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table'); const hr = el('tr');
-    ['매체', '수신료매출', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    ['매체', '수신료매출', '기본채널 수신료', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
     const cell = (a, b) => { const td = el('td', '', money(a)); const sm = el('small'); sm.append(chg(a, b)); td.append(sm); return td; };
     const rcell = (a, b) => { const td = el('td', '', a == null ? '—' : a.toFixed(1) + '%'); td.append(el('small', 'fx-k', b == null ? '' : '전년 ' + b.toFixed(1) + '% (' + (a - b >= 0 ? '+' : '') + (a - b).toFixed(1) + '%p)')); return td; };
     [...PLAT.map((m) => [m === '위성방송' ? '위성' : m, pl.filter((c) => c.media === m)]), ['합계', pl]].forEach(([m, rows]) => {
       const tr = el('tr', m === '합계' ? 'me' : '');
-      tr.append(el('td', '', m), cell(metric(rows, Y, 'subfee'), metric(rows, P, 'subfee')), cell(metric(rows, Y, 'pp'), metric(rows, P, 'pp')), cell(metric(rows, Y, 'vodprog'), metric(rows, P, 'vodprog')), cell(metric(rows, Y, 'retranscost'), metric(rows, P, 'retranscost')), rcell(metric(rows, Y, 'r_pp'), metric(rows, P, 'r_pp')), rcell(metric(rows, Y, 'r_basic'), metric(rows, P, 'r_basic')));
+      tr.append(el('td', '', m), cell(metric(rows, Y, 'subfee'), metric(rows, P, 'subfee')), cell(metric(rows, Y, 'basicfee'), metric(rows, P, 'basicfee')), cell(metric(rows, Y, 'pp'), metric(rows, P, 'pp')), cell(metric(rows, Y, 'vodprog'), metric(rows, P, 'vodprog')), cell(metric(rows, Y, 'retranscost'), metric(rows, P, 'retranscost')), rcell(metric(rows, Y, 'r_pp'), metric(rows, P, 'r_pp')), rcell(metric(rows, Y, 'r_basic'), metric(rows, P, 'r_basic')));
       tb.append(tr);
     });
     t.append(tb); tw.append(t); box.append(h2, tw);
