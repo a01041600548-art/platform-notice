@@ -195,6 +195,13 @@ SOURCES = {
     "kmcc": ("방미통위(KMCC)", "정부", fetch_kmcc),
 }
 
+# 출처 자체가 곧 주제 분류가 되는 경우(예: 방미통위는 기관 공지 전체가 '방미통위'
+# 주제) 기본 topic을 "기타 안내" 대신 이걸로 넣는다. 그 외 출처는 내용을 봐야
+# 주제를 알 수 있어서 계속 "기타 안내"(미분류)로 들어가고 사람이 분류한다.
+DEFAULT_TOPIC = {
+    "kmcc": "방미통위",
+}
+
 
 def notice_key(n):
     """중복 판정 키.
@@ -234,7 +241,7 @@ def main():
             for it in fresh:
                 cand = {
                     "id": f"{key}-{it['date']}-{abs(hash(it['title'])) % 100000}",
-                    "topic": "기타 안내",
+                    "topic": DEFAULT_TOPIC.get(key, "기타 안내"),
                     "platform": platform,
                     "group": group,
                     "date": it["date"],
