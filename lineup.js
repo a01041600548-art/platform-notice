@@ -228,7 +228,7 @@
     const r2 = el('div', 'lu-row'); r2.append(el('b', '', '방송구역')); r2.append(regionPickers(D, G, state, rerender)); bar.append(r2);
     const r3 = el('div', 'lu-row'); r3.append(el('b', '', '찾기'));
     const inp = el('input', 'lu-in'); inp.type = 'search'; inp.placeholder = '채널 이름 (예: 투니버스, tvN, OCN)'; inp.value = state.q; inp.setAttribute('aria-label', '채널 검색');
-    inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(() => { state.q = inp.value.trim(); rerender(); }, 300); });
+    inp.addEventListener('input', () => { clearTimeout(state.t); state.t = setTimeout(() => { state.q = inp.value.trim(); updateBody(); }, 150); });
     const sort = el('select', 'lu-in'); sort.setAttribute('aria-label', '정렬');
     const cols = G.filter((g) => !state.k || g.type === state.k).map((g) => ({ g, i: pick(D, g, state) }));
     [['g', '장르별'], ['n', '이름순'], ['cnt', '편성 많은 순']].concat(cols.map(({ g, i }) => ['p' + i, g.op + ' ' + tlabel(g.p) + ' 번호순'])).forEach(([k, l]) => sort.append(new Option('정렬: ' + l, k)));
@@ -241,30 +241,36 @@
     mk('', '전체 장르', Object.values(counts).reduce((a, b) => a + b, 0));
     GORDER.forEach((g) => { if (counts[g]) mk(g, g, counts[g]); });
     bar.append(gb); if (state.fold) [...bar.children].slice(1).forEach((n) => n.remove()); else box.append(bar);
-    const q = state.q.toLowerCase();
-    const rows = D.chans.filter((c) => (!state.g || c.g === state.g) && (!q || (c.n + ' ' + (c.corp || '') + ' ' + (c.al || '')).toLowerCase().includes(q)) && cols.some(({ i }) => c.c[i]));
-    if (state.s === 'n') rows.sort((a, b) => a.n.localeCompare(b.n, 'ko'));
-    else if (state.s === 'cnt') rows.sort((a, b) => cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
-    else if (state.s[0] === 'p') { const pi = +state.s.slice(1); rows.sort((a, b) => numv(a.c[pi]) - numv(b.c[pi])); }
-    else rows.sort((a, b) => GORDER.indexOf(a.g) - GORDER.indexOf(b.g) || cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
-    box.append(el('p', 'lu-note', `채널 ${rows.length}개 · 비교 ${cols.length}개 라인업` + (state.g ? ' · ' + state.g : '')));
-    const card = el('div', 'lu-card lu-wrap'); const t = el('table', 'lu-t');
-    const hr = el('tr'); hr.append(el('th', 'ch', '채널'));
-    cols.forEach(({ g, i }) => { const p = D.plats[i]; const th = el('th', 'gl'); th.append(tbadge(p), el('div', '', g.op)); if (p.region) th.append(el('span', 'rb', shortReg(p.region))); hr.append(th); });
-    const thd = el('thead'); thd.append(hr); t.append(thd);
-    const tb = el('tbody');
-    rows.slice(0, state.lim).forEach((c) => {
-      const tr = el('tr', ME.test(c.n) && MINE() ? 'me' : '');
-      const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
-      cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); const ev = evBadge(D, i, c.n); if (ev) td.append(ev); if (v && v[1] > 0) { const pn = prodOf(p, v); if (pn) { td.append(el('small', 'lu-cp', pn)); td.title = p.prods[v[1]] + '부터 제공'; } } tr.append(td); });
-      tb.append(tr);
-    });
-    t.append(tb); card.append(t); box.append(card);
-    if (rows.length > state.lim) { const more = el('button', 'lu-more', `더 보기 (${rows.length - state.lim}개 더)`); more.type = 'button'; more.addEventListener('click', () => { state.lim += 150; rerender(); }); box.append(more); }
-    const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · — = 해당 라인업에 없음 · 번호 위에 마우스를 올리면 제공 상품이 보입니다'));
-    [['#2563eb', '2단계 상품부터'], ['#7c3aed', '3단계 상품부터'], ['#db2777', '4단계 이상'], ['#64748b', '번호 아래 작은 글씨 = 그 상품부터 시청 가능']].forEach(([cl, l]) => { const s = el('i', '', '■ ' + l); s.style.color = cl; leg.append(s); });
-    if (D.evidence) leg.append(el('span', '', '✓ = 원문 재검증됨 · ⚠ = 자료 상충(지역별 상이) — 마우스를 올리면 근거가 보입니다'));
-    box.append(leg);
+    const bodyBox = el('div');
+    function updateBody() {
+      bodyBox.replaceChildren();
+      const q = state.q.toLowerCase();
+      const rows = D.chans.filter((c) => (!state.g || c.g === state.g) && (!q || (c.n + ' ' + (c.corp || '') + ' ' + (c.al || '')).toLowerCase().includes(q)) && cols.some(({ i }) => c.c[i]));
+      if (state.s === 'n') rows.sort((a, b) => a.n.localeCompare(b.n, 'ko'));
+      else if (state.s === 'cnt') rows.sort((a, b) => cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
+      else if (state.s[0] === 'p') { const pi = +state.s.slice(1); rows.sort((a, b) => numv(a.c[pi]) - numv(b.c[pi])); }
+      else rows.sort((a, b) => GORDER.indexOf(a.g) - GORDER.indexOf(b.g) || cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
+      bodyBox.append(el('p', 'lu-note', `채널 ${rows.length}개 · 비교 ${cols.length}개 라인업` + (state.g ? ' · ' + state.g : '')));
+      const card = el('div', 'lu-card lu-wrap'); const t = el('table', 'lu-t');
+      const hr = el('tr'); hr.append(el('th', 'ch', '채널'));
+      cols.forEach(({ g, i }) => { const p = D.plats[i]; const th = el('th', 'gl'); th.append(tbadge(p), el('div', '', g.op)); if (p.region) th.append(el('span', 'rb', shortReg(p.region))); hr.append(th); });
+      const thd = el('thead'); thd.append(hr); t.append(thd);
+      const tb = el('tbody');
+      rows.slice(0, state.lim).forEach((c) => {
+        const tr = el('tr', ME.test(c.n) && MINE() ? 'me' : '');
+        const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
+        cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); const ev = evBadge(D, i, c.n); if (ev) td.append(ev); if (v && v[1] > 0) { const pn = prodOf(p, v); if (pn) { td.append(el('small', 'lu-cp', pn)); td.title = p.prods[v[1]] + '부터 제공'; } } tr.append(td); });
+        tb.append(tr);
+      });
+      t.append(tb); card.append(t); bodyBox.append(card);
+      if (rows.length > state.lim) { const more = el('button', 'lu-more', `더 보기 (${rows.length - state.lim}개 더)`); more.type = 'button'; more.addEventListener('click', () => { state.lim += 150; updateBody(); }); bodyBox.append(more); }
+      const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · — = 해당 라인업에 없음 · 번호 위에 마우스를 올리면 제공 상품이 보입니다'));
+      [['#2563eb', '2단계 상품부터'], ['#7c3aed', '3단계 상품부터'], ['#db2777', '4단계 이상'], ['#64748b', '번호 아래 작은 글씨 = 그 상품부터 시청 가능']].forEach(([cl, l]) => { const s = el('i', '', '■ ' + l); s.style.color = cl; leg.append(s); });
+      if (D.evidence) leg.append(el('span', '', '✓ = 원문 재검증됨 · ⚠ = 자료 상충(지역별 상이) — 마우스를 올리면 근거가 보입니다'));
+      bodyBox.append(leg);
+    }
+    updateBody();
+    box.append(bodyBox);
     return box;
   }
 
