@@ -187,12 +187,169 @@ def fetch_kmcc():
     return out
 
 
+def fetch_abn():
+    url = "https://www.abn.co.kr/customer/noticeList.do"
+    r = req("GET", url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    table = soup.select_one("table")
+    rows = table.select("tbody tr") if table else []
+    for tr in rows:
+        tds = tr.select("td")
+        if len(tds) < 3:
+            continue
+        a = tr.select_one("a[onclick*='goView']")
+        if not a:
+            continue
+        title = a.get_text(" ", strip=True)
+        title = re.sub(r"\s*(공지|첨부)\s*$", "", title).strip()
+        title = re.sub(r"\s*(공지|첨부)\s*$", "", title).strip()
+        if not title:
+            continue
+        onclick = a.get("onclick") or ""
+        m_id = re.search(r"goView\('?(\d+)'?\)", onclick)
+        if not m_id:
+            continue
+        seq = m_id.group(1)
+        link = "https://www.abn.co.kr/customer/noticeView.do?seq=" + seq
+        date = ""
+        for td in tds:
+            m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", td.get_text())
+            if m:
+                date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+                break
+        if date:
+            out.append({"title": title, "date": date, "url": link})
+    return out
+
+
+def fetch_gcs():
+    url = "https://www.gcs.co.kr/help/board/notice"
+    r = req("GET", url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    today = datetime.now(KST).date()
+    rows = soup.select("a[href*='/help/notice/']")
+    seen = set()
+    for a in rows:
+        href = a.get("href") or ""
+        m_id = re.search(r"/help/notice/(\d+)", href)
+        if not m_id:
+            continue
+        nid = m_id.group(1)
+        if nid in seen:
+            continue
+        tr = a.find_parent("tr")
+        if not tr:
+            continue
+        tds = tr.select("td")
+        if len(tds) < 2:
+            continue
+        title = a.get_text(" ", strip=True)
+        if not title:
+            title = tds[1].get_text(" ", strip=True) if len(tds) > 1 else ""
+        if not title:
+            continue
+        date = ""
+        row_text = tr.get_text(" ", strip=True)
+        m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", row_text)
+        if m:
+            date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+        else:
+            m2 = re.search(r"(\d{2})[.\-](\d{2})\b", row_text)
+            if m2:
+                mm, dd = int(m2.group(1)), int(m2.group(2))
+                y = today.year
+                try:
+                    d = datetime(y, mm, dd).date()
+                    if d > today:
+                        d = datetime(y - 1, mm, dd).date()
+                    date = d.strftime("%Y-%m-%d")
+                except ValueError:
+                    date = ""
+        if not date:
+            continue
+        seen.add(nid)
+        link = requests.compat.urljoin(url, href)
+        out.append({"title": title, "date": date, "url": link})
+    return out
+
+
+def fetch_jcn():
+    url = "https://www.jcntv.co.kr/notice.html?query=view&page=1&table=BBs01&botype=LIS_B05_01&page_num=20"
+    r = req("GET", url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    table = soup.select_one("table")
+    rows = table.select("tbody tr") if table else []
+    for tr in rows:
+        a = tr.select_one("a[href*='bid=']")
+        if not a:
+            continue
+        tds = tr.select("td")
+        if len(tds) < 2:
+            continue
+        title = a.get_text(" ", strip=True)
+        if not title:
+            continue
+        href = a.get("href") or ""
+        m_id = re.search(r"bid=(\d+)", href)
+        if not m_id:
+            continue
+        link = ("https://www.jcntv.co.kr/notice.html?query=view&page=1&table=BBs01"
+                "&botype=LIS_B05_01&page_num=20&bid=" + m_id.group(1))
+        date = ""
+        row_text = tr.get_text(" ", strip=True)
+        m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", row_text)
+        if m:
+            date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+        if date:
+            out.append({"title": title, "date": date, "url": link})
+    return out
+
+
+def fetch_kctv():
+    url = "https://www.kctv.co.kr/customer/notice_board.php"
+    r = req("GET", url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    table = soup.select_one("table")
+    rows = table.select("tbody tr") if table else []
+    for tr in rows:
+        a = tr.select_one("a[href*='view_notice_board.php']")
+        if not a:
+            continue
+        tds = tr.select("td")
+        if len(tds) < 2:
+            continue
+        title = a.get_text(" ", strip=True)
+        if not title:
+            continue
+        href = a.get("href") or ""
+        m_id = re.search(r"idx=(\d+)", href)
+        if not m_id:
+            continue
+        link = "https://www.kctv.co.kr/customer/view_notice_board.php?idx=" + m_id.group(1)
+        date = ""
+        row_text = tr.get_text(" ", strip=True)
+        m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", row_text)
+        if m:
+            date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+        if date:
+            out.append({"title": title, "date": date, "url": link})
+    return out
+
+
 # (platform, group) 은 sites 배열의 표기와 정확히 일치해야 한다.
 SOURCES = {
     "skbb": ("SK브로드밴드", "IPTV", fetch_skbb),
     "cmb": ("CMB", "MSO", fetch_cmb),
     "dlive": ("딜라이브", "MSO", fetch_dlive),
     "kmcc": ("방미통위(KMCC)", "정부", fetch_kmcc),
+    "abn": ("아름방송(ABN)", "개별SO", fetch_abn),
+    "gcs": ("푸른방송", "개별SO", fetch_gcs),
+    "jcn": ("JCN울산중앙방송", "개별SO", fetch_jcn),
+    "kctv": ("KCTV광주방송", "개별SO", fetch_kctv),
 }
 
 # 출처 자체가 곧 주제 분류가 되는 경우(예: 방미통위는 기관 공지 전체가 '방미통위'
