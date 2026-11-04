@@ -10,7 +10,8 @@
 Usage: python3 tools/collector.py <password> [data.enc.json 경로]
 환경변수 PN_PASSWORD 로 비밀번호를 줘도 된다(그 경우 인자 생략 가능).
 
-기존 notices와의 중복 판정은 (platform, url) 또는 (platform, title, date) 키로 한다.
+기존 notices와의 중복 판정은 URL 안의 게시글 번호(boardSeq/nt_keynum/idx 등) →
+(platform, url) → (platform, title, date) 순으로 한다 (notice_key 참고).
 """
 import base64
 import json
@@ -196,8 +197,20 @@ SOURCES = {
 
 
 def notice_key(n):
-    if n.get("url") and not n["url"].endswith(("list.do", "searchFlag=A")):
-        return ("url", n["platform"] + "|" + n["url"])
+    """중복 판정 키.
+
+    사이트가 URL에 jsessionid 등을 끼워 넣거나(KMCC) 사람이 예전에 제목을
+    축약해서 적어둔 경우, 전체 URL/제목 문자열 비교로는 같은 글인데도 다른
+    글로 오인된다. 그래서 URL 안에 있는 "게시글 번호" 자체(boardSeq,
+    nt_keynum, idx 등 흔한 파라미터명)를 뽑아 그걸로 먼저 비교하고, 그게
+    없을 때만 (platform, title, date) 로 비교한다.
+    """
+    url = n.get("url") or ""
+    m = re.search(r"(?:boardSeq|nt_keynum|idx|bbs_seq|seq)=(\d+)", url)
+    if m:
+        return ("seq", n["platform"] + "|" + m.group(1))
+    if url and not url.endswith(("list.do", "searchFlag=A")):
+        return ("url", n["platform"] + "|" + url)
     return ("tpd", n["platform"] + "|" + n["title"] + "|" + n["date"])
 
 
