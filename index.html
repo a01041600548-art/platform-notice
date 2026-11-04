@@ -7,6 +7,9 @@
 <title>플랫폼 공지 모니터링</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#c2410c">
 <meta name="apple-mobile-web-app-title" content="플랫폼 공지">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -486,6 +489,26 @@
     .more-toggle[aria-expanded="true"], .more-toggle[aria-pressed="true"] { background: color-mix(in srgb, var(--c0) 11%, transparent); color: var(--c0); }
     .more-toggle[aria-expanded="true"] svg, .more-toggle[aria-pressed="true"] svg { color: var(--c0); }
   }
+
+  /* ── v7 · 타이포그래피 아이덴티티 ──
+     본문/UI는 계속 Pretendard. 제목(마스트헤드)에는 신문·시보 같은 인상을
+     주는 세리프를, 수치(채널 건수 등)에는 자릿수가 가지런한 모노스페이스를
+     써서 "데이터를 다루는 전문 매체" 느낌을 분명히 한다. */
+  h1, .lock-box h1, .brand b,
+  .pane > .sec:first-child > div:first-child > h2, .sec > div:first-child > h2 {
+    font-family: "Noto Serif KR", "Pretendard", serif;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .hero h1 { font-family: "Noto Serif KR", "Pretendard", serif; font-weight: 800; letter-spacing: -.015em; }
+  .lock-box h1 { font-weight: 800; }
+  .brand b { font-weight: 700; letter-spacing: -.005em; }
+  .tile .num, .stat b, .mlabel b, .fx-big, .month .mlabel b {
+    font-family: "Roboto Mono", "Pretendard", monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+  }
+  .tile .num small { font-family: "Pretendard", sans-serif; letter-spacing: 0; }
 </style>
 </head>
 <body>
