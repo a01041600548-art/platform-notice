@@ -126,7 +126,26 @@
   .lu-leg { padding: .7em 0 0; border-top: 1px dashed var(--lu-line); margin-top: .2em; line-height: 1.7; }
   .lu-leg i { margin-right: .15em; }
   .lu-mecard, .lu-mesum { border: 1px solid color-mix(in srgb, var(--lu-accent) 22%, var(--lu-line)); }
-  @media (max-width: 720px) { .lu-leg { font-size: .78em; gap: .3em .8em; } }`;
+  @media (max-width: 720px) { .lu-leg { font-size: .78em; gap: .3em .8em; } }
+  .lu-t td.ch { cursor: pointer; }
+  .lu-t td.ch:hover { background: color-mix(in srgb, var(--lu-accent) 6%, var(--lu-card)); }
+  .lu-t td.ch::after { content: '상세 ›'; display: block; font-size: .72em; font-weight: 700; color: var(--lu-accent); margin-top: .25em; opacity: .85; }
+  dialog.lu-dialog { border: 0; border-radius: 18px; padding: 0; width: min(92vw, 42em); max-height: 85vh; color: var(--lu-ink); background: var(--lu-card); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  dialog.lu-dialog::backdrop { background: rgba(10,10,10,.5); }
+  .lu-dialog-h { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: 1em 1.2em; border-bottom: 1px solid var(--lu-line); background: var(--lu-card); }
+  .lu-dialog-h h3 { margin: 0; font-size: 1.2em; font-weight: 800; }
+  .lu-dialog-x { font: inherit; min-width: 36px; min-height: 36px; border-radius: 10px; border: 1.5px solid var(--lu-line); background: var(--lu-bg); color: var(--lu-ink); cursor: pointer; }
+  .lu-dialog-body { padding: .4em 1.2em 1.3em; overflow-y: auto; }
+  .lu-cd-op { padding: .9em 0; border-bottom: 1px solid var(--lu-line); }
+  .lu-cd-op:last-child { border-bottom: 0; }
+  .lu-cd-op h4 { margin: 0 0 .5em; font-size: .98em; font-weight: 800; }
+  .lu-cd-t { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .lu-cd-t td { padding: .35em .3em; border-bottom: 1px dashed var(--lu-line); vertical-align: middle; font-size: .92em; }
+  .lu-cd-t tr:last-child td { border-bottom: 0; }
+  .lu-cd-t td.n { font-weight: 800; font-size: 1.05em; text-align: center; white-space: nowrap; }
+  .lu-cd-t td.tier { text-align: right; color: var(--lu-muted); white-space: nowrap; }
+  .lu-cd-t td.tier b { color: var(--lu-accent); font-weight: 800; }
+  .lu-empty-list { font-variant-numeric: tabular-nums; word-break: break-all; }`;
   function addStyle() { if (document.getElementById('lu-style')) return; const s = el('style'); s.id = 'lu-style'; s.textContent = CSS; document.head.appendChild(s); }
   const tlabel = (p) => p.kind === '케이블' ? p.type : p.kind;
   const tbadge = (p) => { const b = el('span', 'tb', tlabel(p)); b.style.setProperty('--tc', TC[tlabel(p)] || '#64748b'); return b; };
@@ -143,6 +162,47 @@
 
   const sp = (s) => String(s || '').replace(/^(B tv |tv |지니 TV |U\+tv |iTV |UHD |헬로tv )/i, '').trim();
   const prodOf = (p, v) => (v && p && p.prods && v[1] >= 0 && p.prods[v[1]]) ? sp(p.prods[v[1]]) : '';
+  const tierLabel = (p, v) => (!v || v[1] <= 0) ? '저티어 · 기본 포함' : ('고티어 · ' + (prodOf(p, v) || ('상품 ' + (v[1] + 1) + '단계')) + '부터');
+
+  function channelDetailBody(D, c) {
+    const wrap = el('div', 'lu-dialog-body');
+    const rows = D.plats.map((p, i) => ({ p, i, v: c.c[i] })).filter((x) => x.v);
+    if (!rows.length) { wrap.append(el('p', 'lu-note', '편성된 플랫폼이 없습니다.')); return wrap; }
+    const byOp = {};
+    rows.forEach((r) => { (byOp[r.p.op] = byOp[r.p.op] || []).push(r); });
+    Object.keys(byOp).sort((a, b) => a.localeCompare(b, 'ko')).forEach((op) => {
+      const sec = el('div', 'lu-cd-op'); sec.append(el('h4', '', op));
+      const t = el('table', 'lu-cd-t');
+      byOp[op].sort((a, b) => tlabel(a.p).localeCompare(tlabel(b.p), 'ko') || (a.p.region || '').localeCompare(b.p.region || '', 'ko')).forEach(({ p, v }) => {
+        const tr = el('tr');
+        const td1 = el('td'); td1.append(tbadge(p)); if (p.region) td1.append(document.createTextNode(' '), el('span', 'rb', shortReg(p.region)));
+        const td2 = el('td', 'n', v[0] + '번');
+        const td3 = el('td', 'tier');
+        const [cat, rest] = tierLabel(p, v).split(' · ');
+        td3.append(el('b', '', cat), document.createTextNode(' · ' + rest));
+        tr.append(td1, td2, td3); t.append(tr);
+      });
+      sec.append(t); wrap.append(sec);
+    });
+    return wrap;
+  }
+
+  function showDialog(title, bodyEl) {
+    let dlg = document.getElementById('lu-dialog');
+    if (!dlg) {
+      dlg = document.createElement('dialog'); dlg.id = 'lu-dialog'; dlg.className = 'lu-dialog';
+      document.body.appendChild(dlg);
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    }
+    dlg.replaceChildren();
+    const head = el('div', 'lu-dialog-h'); head.append(el('h3', '', title));
+    const x = el('button', 'lu-dialog-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '닫기'); x.addEventListener('click', () => dlg.close());
+    head.append(x);
+    dlg.append(head, bodyEl);
+    dlg.showModal();
+  }
+
+  function openChannelDetail(D, c) { showDialog(c.n, channelDetailBody(D, c)); }
   const EV_ICON = { verified_present: ['✓', 'vp', '검증됨'], source_conflict: ['⚠', 'vc', '자료 상충'], verified_absent: ['✗', 'va', '미편성 확인'], extraction_failed: ['·', 'ff', '추출 실패'], fetch_failed: ['·', 'ff', '자료 확인 불가'], unknown: ['', '', ''] };
   function evOf(D, i, name) { return D.evidence && D.evidence[i + '|' + name]; }
   function evBadge(D, i, name) {
@@ -258,7 +318,7 @@
       const tb = el('tbody');
       rows.slice(0, state.lim).forEach((c) => {
         const tr = el('tr', ME.test(c.n) && MINE() ? 'me' : '');
-        const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); tr.append(td0);
+        const td0 = el('td', 'ch'); td0.style.setProperty('--gc', GC[c.g] || '#94a3b8'); td0.append(c.n, el('small', '', c.g + (c.corp ? ' · ' + c.corp : ''))); td0.tabIndex = 0; td0.setAttribute('role', 'button'); td0.title = '클릭하면 전체 플랫폼 상세(채널번호·티어)를 봅니다'; td0.addEventListener('click', () => openChannelDetail(D, c)); td0.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openChannelDetail(D, c); } }); tr.append(td0);
         cols.forEach(({ i }) => { const p = D.plats[i]; const v = c.c[i]; const td = el('td', 'gl ' + (v ? 'no' + (v[1] > 0 ? ' t' + Math.min(3, v[1]) : '') : 'na'), v ? v[0] : '—'); const ev = evBadge(D, i, c.n); if (ev) td.append(ev); if (v && v[1] > 0) { const pn = prodOf(p, v); if (pn) { td.append(el('small', 'lu-cp', pn)); td.title = p.prods[v[1]] + '부터 제공'; } } tr.append(td); });
         tb.append(tr);
       });
@@ -298,6 +358,65 @@
     return box;
   }
 
+  function emptyNumbersFor(D, i) {
+    // 채널번호는 보통 장르별로 블록(100번대=영화, 200번대=드라마 …)을 미리
+    // 떼어두고 그 안에서 채우는 방식이라, 단순히 min~max 사이 빈 숫자를
+    // 전부 나열하면 "장르 블록 안의 미사용 예약 구간"까지 수백 개씩 섞여
+    // 들어가 영업상 의미가 없다. 그래서 연속된 빈 번호를 "구간(run)"으로
+    // 묶어서, 5개 이하로 짧게 비어있는 구간(= 거의 다 찬 블록의 마지막 빈
+    // 자리, 영업 걸기 좋은 후보)과 그보다 긴 구간(= 아직 통째로 비어있는
+    // 예약 블록)을 구분해서 보여준다.
+    const nums = [];
+    D.chans.forEach((c) => { const v = c.c[i]; if (v) { const m = String(v[0]).match(/^(\d+)$/); if (m) nums.push(+m[1]); } });
+    if (!nums.length) return { min: 0, max: 0, used: 0, runs: [] };
+    const min = Math.min(...nums), max = Math.max(...nums), set = new Set(nums), runs = [];
+    let i2 = min;
+    while (i2 <= max) {
+      if (set.has(i2)) { i2++; continue; }
+      let j = i2; while (j <= max && !set.has(j)) j++;
+      runs.push([i2, j - 1]); i2 = j;
+    }
+    return { min, max, used: nums.length, runs };
+  }
+
+  function emptyView(D, state, rerender) {
+    const box = el('div', 'lu');
+    box.append(el('p', 'lu-note', '플랫폼별로 실제 쓰이고 있는 채널번호의 최소~최대 구간 안에서, 어느 채널에도 배정되지 않은 번호입니다. "26-2"처럼 복수 피드로 붙는 번호는 집계에서 뺐습니다. 신규 채널 영업 시 빈 자리 후보로 참고하세요.'));
+    const r1 = el('div', 'lu-row'); r1.append(el('b', '', '상품 유형'));
+    const tt = el('div', 'lu-type');
+    [['', '전체'], ['IPTV', 'IPTV'], ['위성', '위성'], ['디지털', '케이블 디지털'], ['8VSB', '케이블 8VSB'], ['IP', '케이블 IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.ek === k)); b.addEventListener('click', () => { state.ek = k; rerender(); }); tt.append(b); });
+    r1.append(tt); const ebar = el('div', 'lu-card lu-bar'); ebar.append(r1); box.append(ebar);
+    const G = groupsOf(D).filter((g) => !state.ek || g.type === state.ek);
+    const grid = el('div', 'lu-rg');
+    G.forEach((gr) => {
+      gr.idx.forEach((i) => {
+        const p = D.plats[i];
+        const data = emptyNumbersFor(D, i);
+        const card = el('div', 'lu-card lu-rgcard');
+        const h = el('h4'); h.append(tbadge(p), document.createTextNode(' ' + p.op)); if (p.region) h.append(el('span', 'rb', shortReg(p.region))); card.append(h);
+        if (!data.max) card.append(el('p', 'lu-note', '데이터 없음'));
+        else if (!data.runs.length) card.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간(사용 ${data.used}개)에 빈 번호 없음`));
+        else {
+          const short = data.runs.filter((r) => r[1] - r[0] < 5);
+          const long = data.runs.filter((r) => r[1] - r[0] >= 5);
+          card.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간 · 사용 ${data.used}개`));
+          if (short.length) {
+            const nums = short.flatMap((r) => { const a = []; for (let n = r[0]; n <= r[1]; n++) a.push(n); return a; });
+            card.append(el('p', '', ''), el('p', '', '영업 후보 (짧게 빈 자리)'));
+            card.append(el('p', 'lu-note lu-empty-list', nums.join(', ') + '번'));
+          }
+          if (long.length) {
+            card.append(el('p', '', '통째로 빈 블록'));
+            card.append(el('p', 'lu-note lu-empty-list', long.map((r) => `${r[0]}~${r[1]}번 (${r[1] - r[0] + 1}개)`).join(' · ')));
+          }
+        }
+        grid.append(card);
+      });
+    });
+    box.append(grid);
+    return box;
+  }
+
   function byPlat(D, state, rerender) {
     const box = el('div', 'lu');
     const G = groupsOf(D);
@@ -318,7 +437,7 @@
       const items = list.filter((x) => !gg || x.c.g === gg);
       if (gg) { const h = el('h4', 'lu-sub', gg + ' · ' + items.length); h.style.setProperty('--gc', GC[gg]); box.append(h); }
       const grid = el('div', 'lu-list');
-      items.forEach(({ c, v }) => { const it = el('div', 'lu-item' + (ME.test(c.n) && MINE() ? ' me' : '')); it.style.setProperty('--gc', GC[c.g] || '#94a3b8'); it.append(el('b', '', v[0]), el('span', '', c.n)); const sm = [c.g]; if (p.prods && p.prods[v[1]] && v[1] > 0) sm.push(p.prods[v[1]] + '부터'); it.append(el('small', '', sm.join(' · '))); grid.append(it); });
+      items.forEach(({ c, v }) => { const it = el('div', 'lu-item' + (ME.test(c.n) && MINE() ? ' me' : '')); it.style.setProperty('--gc', GC[c.g] || '#94a3b8'); it.style.cursor = 'pointer'; it.tabIndex = 0; it.setAttribute('role', 'button'); it.title = '클릭하면 전체 플랫폼 상세를 봅니다'; it.addEventListener('click', () => openChannelDetail(D, c)); it.append(el('b', '', v[0]), el('span', '', c.n)); const sm = [c.g]; if (p.prods && p.prods[v[1]] && v[1] > 0) sm.push(p.prods[v[1]] + '부터'); it.append(el('small', '', sm.join(' · '))); grid.append(it); });
       box.append(grid);
     });
     return box;
@@ -331,10 +450,10 @@
     const wrap = el('div', 'lu');
     if (MINE()) wrap.append(meCards(D));
     const seg = el('div', 'lu-seg');
-    [['mx', '채널 × 플랫폼 비교'], ['rg', '방송구역별 번호'], ['pl', '라인업 전체 보기']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.v === k)); b.addEventListener('click', () => { state.v = k; rerender(); }); seg.append(b); });
+    [['mx', '채널 × 플랫폼 비교'], ['rg', '방송구역별 번호'], ['pl', '라인업 전체 보기'], ['em', '빈 채널번호']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.v === k)); b.addEventListener('click', () => { state.v = k; rerender(); }); seg.append(b); });
     if (window.pnMineBtn) seg.append(window.pnMineBtn());
     wrap.append(seg);
-    wrap.append(state.v === 'mx' ? matrix(D, state, rerender) : state.v === 'rg' ? byRegion(D, state, rerender) : byPlat(D, state, rerender));
+    wrap.append(state.v === 'mx' ? matrix(D, state, rerender) : state.v === 'rg' ? byRegion(D, state, rerender) : state.v === 'em' ? emptyView(D, state, rerender) : byPlat(D, state, rerender));
     root.replaceChildren(wrap);
   };
 })();
