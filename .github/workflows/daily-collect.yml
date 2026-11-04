@@ -27,14 +27,19 @@ jobs:
           PN_PASSWORD: ${{ secrets.PN_PASSWORD }}
         run: python3 tools/collector.py
 
+      - name: 캘린더(방미통위 의사일정 + 언론사 수동입력) 갱신
+        env:
+          PN_PASSWORD: ${{ secrets.PN_PASSWORD }}
+        run: python3 tools/build_calendar.py
+
       - name: 변경사항 커밋 및 푸시
         run: |
-          if git diff --quiet -- data.enc.json; then
+          if git diff --quiet -- data.enc.json calendar.enc.json; then
             echo "변경 없음"
             exit 0
           fi
           git config user.name "platform-notice-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data.enc.json
-          git commit -m "공지 자동 수집 ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+          git add data.enc.json calendar.enc.json
+          git commit -m "공지·캘린더 자동 수집 ($(date -u '+%Y-%m-%d %H:%M UTC'))"
           git push
