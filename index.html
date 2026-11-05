@@ -664,9 +664,22 @@
     try { FIN = await decrypt(PW, 'finance.enc.json'); window.renderFinance($('finance'), FIN); }
     catch (e) { $('finance').replaceChildren(el('p', 'muted', '재산상황 자료를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.')); }
   }
+  // 방미통위(KMCC) 공지 게시판(이미 자동 수집 중)에서 "일정성" 있는 항목만 추려 캘린더에 자동 반영.
+  // 공시송달·압류·과태료·모범공무원 포상처럼 방송 플랫폼 업무와 무관한 행정 통지는 제외한다.
+  const KMCC_NOISE = ['공시송달', '압류', '과태료', '모범공무원'];
+  function kmccAutoEvents() {
+    if (!D || !Array.isArray(D.notices)) return [];
+    return D.notices
+      .filter((n) => n.platform === '방미통위(KMCC)' && !KMCC_NOISE.some((k) => n.title.includes(k)))
+      .map((n) => ({ category: '방미통위', org: '방미통위(KMCC)', title: n.title, kind: '공지', date: n.date, url: n.url, note: '공지 게시판에서 자동 반영' }));
+  }
   async function loadCalendar() {
     if (CAL || !PW) return;
-    try { CAL = await decrypt(PW, 'calendar.enc.json'); window.renderCalendar($('calendar'), CAL); }
+    try {
+      CAL = await decrypt(PW, 'calendar.enc.json');
+      const merged = { updated: CAL.updated, events: (CAL.events || []).concat(kmccAutoEvents()) };
+      window.renderCalendar($('calendar'), merged);
+    }
     catch (e) { $('calendar').replaceChildren(el('p', 'muted', '캘린더 자료를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.')); }
   }
   async function decrypt(pw, file) {

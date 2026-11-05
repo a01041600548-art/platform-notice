@@ -96,6 +96,11 @@
   .lu-rg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19em), 1fr)); gap: 1em; }
   .lu-rgcard { padding: 1em 1.1em; display: flex; flex-direction: column; gap: .6em; }
   .lu-rgcard h4 { margin: 0; display: flex; align-items: center; gap: .5em; font-size: 1.05em; }
+  details.lu-rgcard { padding: .85em 1.1em; }
+  details.lu-rgcard summary { cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; gap: .5em; font-size: 1.05em; font-weight: 800; list-style: revert; }
+  details.lu-rgcard summary::marker { color: var(--lu-muted); }
+  details.lu-rgcard[open] summary { margin-bottom: .6em; }
+  .lu-rgstat { margin-left: auto; font-size: .78em; font-weight: 700; color: var(--lu-muted); }
   .lu-rgl { display: grid; grid-template-columns: 1fr auto; gap: 0; }
   .lu-rgl div { padding: .38em .2em; border-bottom: 1px solid var(--lu-line); font-size: .92em; }
   .lu-rgl div:nth-child(2n) { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -742,7 +747,15 @@
     const bar = el('div', 'lu-card lu-bar'); const r = el('div', 'lu-row'); r.append(el('b', '', '채널 선택'));
     const sel = el('select', 'lu-in');
     const cands = D.chans.filter((c) => D.plats.some((p, i) => p.kind === '케이블' && c.c[i])).sort((a, b) => (MINE() ? ME.test(b.n) - ME.test(a.n) : 0) || a.n.localeCompare(b.n, 'ko'));
-    cands.forEach((c) => sel.append(new Option(c.n + ' (' + c.g + ')', c.n)));
+    // 장르별로 묶어서 보여달라는 요청 반영 — GORDER 순서대로 <optgroup>, 그룹 안에서는 기존 정렬 유지
+    const byGenre = {};
+    cands.forEach((c) => { const g = c.g || '장르 미지정'; (byGenre[g] = byGenre[g] || []).push(c); });
+    const genreOrder = GORDER.filter((g) => byGenre[g]).concat(Object.keys(byGenre).filter((g) => !GORDER.includes(g)));
+    genreOrder.forEach((g) => {
+      const og = el('optgroup'); og.label = g;
+      byGenre[g].forEach((c) => og.append(new Option(c.n, c.n)));
+      sel.append(og);
+    });
     if (!state.rc) state.rc = (cands[0] || {}).n; sel.value = state.rc;
     sel.addEventListener('change', () => { state.rc = sel.value; rerender(); });
     r.append(sel); bar.append(r); box.append(bar);
@@ -781,34 +794,49 @@
     const r1 = el('div', 'lu-row'); r1.append(el('b', '', '상품 유형'));
     const tt = el('div', 'lu-type');
     [['', '전체'], ['IPTV', 'IPTV'], ['위성', '위성'], ['디지털', '케이블 디지털'], ['8VSB', '케이블 8VSB'], ['IP', '케이블 IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.ek === k)); b.addEventListener('click', () => { state.ek = k; rerender(); }); tt.append(b); });
-    r1.append(tt); const ebar = el('div', 'lu-card lu-bar'); ebar.append(r1); box.append(ebar);
+    r1.append(tt); const ebar = el('div', 'lu-card lu-bar'); ebar.append(r1);
+    // 124개 카드가 한 번에 쫙 나열되면 보기 번거롭다는 피드백 반영 —
+    // 사업자 검색으로 좁히고, 카드는 기본 접어서 요약(사용/빈자리 개수)만 먼저 보여준다
+    const r2 = el('div', 'lu-row'); r2.append(el('b', '', '사업자 검색'));
+    const einp = el('input', 'lu-in'); einp.type = 'search'; einp.placeholder = '사업자 이름 (예: 딜라이브, HCN)'; einp.value = state.eq || ''; einp.setAttribute('aria-label', '사업자 검색');
+    einp.addEventListener('input', () => { clearTimeout(state.et); state.et = setTimeout(() => { state.eq = einp.value.trim(); rerender(); }, 150); });
+    r2.append(einp); ebar.append(r2);
+    box.append(ebar);
     const G = groupsOf(D).filter((g) => !state.ek || g.type === state.ek);
-    const grid = el('div', 'lu-rg');
+    const eq = (state.eq || '').toLowerCase();
+    const cards = [];
     G.forEach((gr) => {
+      if (eq && !gr.op.toLowerCase().includes(eq)) return;
       gr.idx.forEach((i) => {
         const p = D.plats[i];
         const data = emptyNumbersFor(D, i);
-        const card = el('div', 'lu-card lu-rgcard');
-        const h = el('h4'); h.append(tbadge(p), document.createTextNode(' ' + p.op)); if (p.region) h.append(el('span', 'rb', shortReg(p.region))); card.append(h);
-        if (!data.max) card.append(el('p', 'lu-note', '데이터 없음'));
-        else if (!data.runs.length) card.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간(사용 ${data.used}개)에 빈 번호 없음`));
+        const det = el('details', 'lu-card lu-rgcard'); det.open = Boolean(eq);
+        const sum = el('summary'); sum.append(tbadge(p), document.createTextNode(' ' + p.op)); if (p.region) sum.append(el('span', 'rb', shortReg(p.region)));
+        const emptyCnt = data.runs.reduce((a, r) => a + (r[1] - r[0] + 1), 0);
+        sum.append(el('span', 'lu-rgstat', data.max ? `사용 ${data.used}개 · 빈자리 ${emptyCnt}개` : '데이터 없음'));
+        det.append(sum);
+        if (!data.max) det.append(el('p', 'lu-note', '데이터 없음'));
+        else if (!data.runs.length) det.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간(사용 ${data.used}개)에 빈 번호 없음`));
         else {
           const short = data.runs.filter((r) => r[1] - r[0] < 5);
           const long = data.runs.filter((r) => r[1] - r[0] >= 5);
-          card.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간 · 사용 ${data.used}개`));
+          det.append(el('p', 'lu-note', `${data.min}~${data.max}번 구간 · 사용 ${data.used}개`));
           if (short.length) {
             const nums = short.flatMap((r) => { const a = []; for (let n = r[0]; n <= r[1]; n++) a.push(n); return a; });
-            card.append(el('p', '', ''), el('p', '', '영업 후보 (짧게 빈 자리)'));
-            card.append(el('p', 'lu-note lu-empty-list', nums.join(', ') + '번'));
+            det.append(el('p', '', ''), el('p', '', '영업 후보 (짧게 빈 자리)'));
+            det.append(el('p', 'lu-note lu-empty-list', nums.join(', ') + '번'));
           }
           if (long.length) {
-            card.append(el('p', '', '통째로 빈 블록'));
-            card.append(el('p', 'lu-note lu-empty-list', long.map((r) => `${r[0]}~${r[1]}번 (${r[1] - r[0] + 1}개)`).join(' · ')));
+            det.append(el('p', '', '통째로 빈 블록'));
+            det.append(el('p', 'lu-note lu-empty-list', long.map((r) => `${r[0]}~${r[1]}번 (${r[1] - r[0] + 1}개)`).join(' · ')));
           }
         }
-        grid.append(card);
+        cards.push(det);
       });
     });
+    const grid = el('div', 'lu-rg');
+    if (!cards.length) grid.append(el('p', 'lu-note', '검색 결과가 없습니다.'));
+    else cards.forEach((c) => grid.append(c));
     box.append(grid);
     return box;
   }
