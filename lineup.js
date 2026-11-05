@@ -185,6 +185,7 @@
   .lu-stat .dot { width: .6em; height: .6em; border-radius: 50%; display: inline-block; flex: none; }
   .lu-stat .d-vp { background: #15803d; } .lu-stat .d-vc { background: var(--warn, #a16207); } .lu-stat .d-ef { background: var(--bad, #c2410c); } .lu-stat .d-ff { background: #6b7280; }
   .lu-stat .cap { font-size: .72em; color: var(--lu-muted); font-weight: 600; }
+  .lu-stat-cap { grid-column: 1 / -1; margin: 0 0 .1em; font-size: .83em; color: var(--lu-muted); font-weight: 600; line-height: 1.5; }
 
   /* ---- 도구막대 2행 + 칩 ---- */
   .lu-tool2 { display: flex; flex-wrap: wrap; gap: .6em 1em; align-items: flex-start; }
@@ -310,7 +311,10 @@
     extraction_failed: { label: '인식 필요', short: '인식필요', icon: '!', cls: 'ef' },
     fetch_failed: { label: '수집 실패', short: '수집실패', icon: '×', cls: 'ff' },
     present_unverified: { label: '값 있음 · 원문 미검증', short: '', icon: '', cls: 'un' },
-    unknown: { label: '미확인', short: '미확인', icon: '', cls: 'un' },
+    // '미확인'이라는 단어만 셀에 그대로 찍으면 "미편성"과 헷갈린다는 피드백이 있어
+    // 표 안에서는 대시(─)로만 보여주고, 실제 뜻("아직 원문 대조를 못 했다 — 없는 게 확정된 게 아니다")은
+    // 툴팁(aria-label/title)과 범례에서 풀어서 설명한다.
+    unknown: { label: '미확인 — 원문 대조 전', short: '─', icon: '', cls: 'un' },
   };
   function statusCounts(D) {
     const c = { verified_present: 0, source_conflict: 0, extraction_failed: 0, fetch_failed: 0 };
@@ -520,7 +524,9 @@
 
   function statusBar(D, state, rerender) {
     const counts = statusCounts(D);
+    const checked = Object.keys(D.evidence || {}).length;
     const card = el('div', 'lu-card lu-stat'); card.setAttribute('role', 'group'); card.setAttribute('aria-label', '검증 상태 요약 — 클릭하면 해당 상태로 걸러 봅니다');
+    card.append(el('p', 'lu-stat-cap', `전체 ${D.chans.length}개 채널 중 지금까지 원문 PDF·HWP와 직접 대조를 마친 ${checked}건의 결과입니다. 나머지는 아직 대조 전이라 표에 "─"로 비어 보입니다 — 확인이 안 됐다는 뜻이지 그 채널이 없다는 뜻이 아닙니다.`));
     [['verified_present', 'd-vp'], ['source_conflict', 'd-vc'], ['extraction_failed', 'd-ef'], ['fetch_failed', 'd-ff']].forEach(([key, dot]) => {
       const meta = STATUS_META[key];
       const b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.vf === key));
@@ -675,6 +681,7 @@
       const leg = el('div', 'lu-leg'); leg.append(el('span', '', '숫자 = 채널번호 · 셀을 클릭하면 근거 패널이 열립니다 · 번호 위에 마우스를 올리면 제공 상품이 보입니다'));
       [['#2563eb', '2단계 상품부터'], ['#7c3aed', '3단계 상품부터'], ['#db2777', '4단계 이상'], ['#64748b', '숫자 아래 작은 글씨 = 그 상품부터 시청 가능']].forEach(([cl, l]) => { const s = el('i', '', '■ ' + l); s.style.color = cl; leg.append(s); });
       leg.append(el('span', '', '✓ 확인완료 · ⚠ 자료 충돌 · ! 인식 필요 · × 수집 실패 · ? 상품 미확인'));
+      leg.append(el('span', '', '─ (빈 칸) = 아직 원문을 대조하지 못한 칸 · "미편성 확정"이 아니라 "모름"이라는 뜻입니다'));
       bodyBox.append(leg);
     }
     updateBody();
