@@ -23,7 +23,8 @@
   .cal-navbtns button:hover { background: color-mix(in srgb, var(--ink) 6%, var(--card)); }
   .cal-navbtns .today { min-width: auto; padding: 0 .9em; font-size: .85em; }
 
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  /* minmax(0, 1fr)이 아니면 일정 제목(nowrap)의 최소너비가 열을 밀어내 날짜 칸이 제각각이 된다 */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
   .cal-wd { text-align: center; font-size: .78em; font-weight: 800; color: var(--ink2); padding: .3em 0; }
   .cal-wd.sun { color: #dc2626; } .cal-wd.sat { color: #2563eb; }
   .cal-cell { min-height: 5.6em; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: .4em; display: flex; flex-direction: column; gap: .25em; cursor: pointer; text-align: left; font: inherit; color: inherit; }
@@ -39,6 +40,9 @@
   .cal-detail { display: flex; flex-direction: column; gap: .7em; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); padding: 1.1em 1.2em; }
   .cal-detail h4 { margin: 0; font-size: 1.05em; font-weight: 800; }
   .cal-detail .cal-empty { padding: 1em 0; text-align: center; color: var(--ink2); }
+  .cal-jump { display: flex; flex-wrap: wrap; gap: .5em; justify-content: center; padding-bottom: .4em; }
+  .cal-jump button { font: inherit; font-weight: 700; font-size: .88em; min-height: 40px; padding: 0 1em; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .cal-jump button:hover { border-color: var(--c0); color: var(--c0); }
   .cal-ev { display: flex; flex-direction: column; gap: .35em; padding: .8em 0; border-top: 1px dashed var(--line); }
   .cal-ev:first-of-type { border-top: 0; padding-top: 0; }
   .cal-badges { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
@@ -124,11 +128,27 @@
     const grid = el('div', 'cal-grid');
     const detail = el('div', 'cal-detail');
 
+    // 그 달에 일정이 있는 날짜들(현재 분류 기준)
+    function datesIn(ym) {
+      return [...byDate.keys()].filter((d) => d.startsWith(ym) && filteredEventsFor(d).length).sort();
+    }
+    // 일정이 있는 가장 가까운 달 — 빈 달에서 막히지 않게 건너뛰기용
+    function nearestYm(dir) {
+      const all = [...new Set([...byDate.keys()].filter((d) => filteredEventsFor(d).length).map((d) => d.slice(0, 7)))].sort();
+      return dir < 0 ? all.filter((x) => x < state.ym).pop() : all.find((x) => x > state.ym);
+    }
+    function goYm(ym) {
+      if (!ym) return;
+      state.ym = ym;
+      // 달을 옮기면 선택 날짜도 그 달로 맞춘다(이전 달 날짜가 아래에 남아 있지 않도록)
+      const ds = datesIn(ym);
+      state.sel = ds.includes(todays) ? todays : (ds[0] || null);
+      renderAll();
+    }
     function shiftMonth(delta) {
       const [y, m] = state.ym.split('-').map(Number);
       const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-      state.ym = d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
-      renderAll();
+      goYm(d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'));
     }
     prevBtn.addEventListener('click', () => shiftMonth(-1));
     nextBtn.addEventListener('click', () => shiftMonth(1));
@@ -176,7 +196,19 @@
     }
 
     function renderDetail() {
-      if (!state.sel) { detail.replaceChildren(el('div', 'cal-empty', '날짜를 선택하면 해당 일정이 여기에 표시됩니다.')); return; }
+      if (!state.sel) {
+        const box = el('div');
+        const has = datesIn(state.ym).length;
+        box.append(el('div', 'cal-empty', has ? '날짜를 선택하면 해당 일정이 여기에 표시됩니다.' : '이 달에는 등록된 일정이 없습니다.'));
+        if (!has) {
+          const jump = el('div', 'cal-jump');
+          const prev = nearestYm(-1), next = nearestYm(1);
+          if (prev) { const b = el('button', null, '‹ ' + prev.replace('-', '년 ') + '월 일정'); b.type = 'button'; b.addEventListener('click', () => goYm(prev)); jump.append(b); }
+          if (next) { const b = el('button', null, next.replace('-', '년 ') + '월 일정 ›'); b.type = 'button'; b.addEventListener('click', () => goYm(next)); jump.append(b); }
+          if (jump.children.length) box.append(jump);
+        }
+        detail.replaceChildren(box); return;
+      }
       const evs = filteredEventsFor(state.sel);
       const [y, m, d] = state.sel.split('-');
       const head = el('h4', null, y + '년 ' + Number(m) + '월 ' + Number(d) + '일');

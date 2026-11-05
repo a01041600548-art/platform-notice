@@ -831,7 +831,8 @@
 
   function emptyView(D, state, rerender) {
     const box = el('div', 'lu');
-    box.append(el('p', 'lu-note', '플랫폼별로 실제 쓰이고 있는 채널번호의 최소~최대 구간 안에서, 어느 채널에도 배정되지 않은 번호입니다. "26-2"처럼 복수 피드로 붙는 번호는 집계에서 뺐습니다. 신규 채널 영업 시 빈 자리 후보로 참고하세요.'));
+    box.append(el('p', 'lu-note', '사업자가 "비어 있다"고 공시한 번호가 아니라, 이 사이트에 등록된 채널번호로 계산한 값입니다. 플랫폼별로 실제 쓰이는 번호의 최소~최대 구간 안에서 어느 채널에도 배정되지 않은 번호를 빈 자리로 봅니다("26-2"처럼 복수 피드로 붙는 번호는 제외).'));
+    box.append(el('p', 'lu-note', '※ 약관에 안 나오는 오디오채널(예: SK브로드밴드 600~639번)이나 사업자 내부 예약 번호도 빈 자리로 잡히고, 아직 원문 대조를 못 한 라인업은 실제보다 빈 자리가 많게 나옵니다. 후보를 추리는 용도로만 쓰고, 제안 전에 해당 사업자 편성표로 다시 확인하세요.'));
     const r1 = el('div', 'lu-row'); r1.append(el('b', '', '상품 유형'));
     const tt = el('div', 'lu-type');
     [['', '전체'], ['IPTV', 'IPTV'], ['위성', '위성'], ['디지털', '케이블 디지털'], ['8VSB', '케이블 8VSB'], ['IP', '케이블 IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.ek === k)); b.addEventListener('click', () => { state.ek = k; rerender(); }); tt.append(b); });

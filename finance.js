@@ -679,8 +679,10 @@
     };
     const ub = el('div', 'rk-media rk-unit'); [['co', '회사별'], ['grp', '계열 합산 (MSO·PP계열·지역MBC 등)']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-pressed', String(state.ru === k)); b.addEventListener('click', () => { state.ru = k; rerender(); }); ub.append(b); });
     box.append(ub);
-    const GN = (GEN && GEN.genres) || ['종교', '영화', '해외드라마', '국내드라마', '음악', '스포츠', '시사·경제', '교양·생활정보', '예능·오락', '취미·레저', '어린이·교육', '기타'];
-    const gb = el('div', 'rk-media rk-gn'); gb.append(el('span', 'rk-gl', '평가장르(채널군)'));
+    // 채널평가 12개 장르만 두면 홈쇼핑·종편·보도·유료채널 법인을 장르로 고를 수가 없어
+    // 채널법인·장르 화면과 같은 묶음(EXTRA_G)을 뒤에 이어 붙인다.
+    const GN = ((GEN && GEN.genres) || ['종교', '영화', '해외드라마', '국내드라마', '음악', '스포츠', '시사·경제', '교양·생활정보', '예능·오락', '취미·레저', '어린이·교육', '기타']).concat(EXTRA_G);
+    const gb = el('div', 'rk-media rk-gn'); gb.append(el('span', 'rk-gl', '장르(채널군)'));
     ['', ...GN].forEach((g) => { const b = el('button', '', g || '전체'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.rgn === g)); b.addEventListener('click', () => { state.rgn = g; if (g) { state.rmd = 'PP'; state.ru = 'co'; } rerender(); }); gb.append(b); });
     box.append(gb);
     const inGn = (c) => (c.ch || []).filter((x) => x.gn === state.rgn);
@@ -740,7 +742,8 @@
     if (!shown.length) box.append(el('p', 'fx-empty', '조건에 맞는 회사가 없습니다.')); else box.append(tw);
     if (shown.length > state.rlim) { const more = el('button', 'fx-close', `더 보기 (${shown.length - state.rlim}개사 더)`); more.type = 'button'; more.addEventListener('click', () => { state.rlim += 50; rerender(); }); box.append(more); }
     if (['asset', 'debt', 'equity', 'debtr'].includes(k) && (!state.rmd || state.rmd === 'SO') && state.ru !== 'grp') box.append(el('p', 'fx-note', '※ 공표집에서 MSO 계열 SO(LG·딜라이브·SKB·HCN·CMB)는 자산·부채·자본이 계열 대표법인(본사)에만 기재되고 개별 SO 칸은 \'-\'로 공표됩니다. 위의 \'계열 합산\'을 누르면 MSO 단위로 비교할 수 있습니다.'));
-    if (state.rgn) box.append(el('p', 'fx-note', `※ 평가장르는 공표집·채널평가 채널군 기준입니다. ${state.rgn} 채널을 하나라도 가진 PP를 회사 단위로 비교하며, 여러 장르 채널을 가진 MPP는 회사 전체 금액입니다. 채널평가의 콘텐츠 투자비 항목(20점)은 채널군 안에서 ‘투자비 순위×4 + 투자비 비율 순위×6’으로 등급을 매기므로, 위 ‘채널평가 투자비’ 두 항목으로 순위를 보면 예상 위치를 가늠할 수 있습니다.`));
+    if (state.rgn && EXTRA_G.includes(state.rgn)) box.append(el('p', 'fx-note', `※ ${state.rgn}은(는) 채널평가 채널군이 아니라 공표집 분류입니다. ${state.rgn} 채널을 하나라도 가진 법인을 회사 단위로 비교하며, 여러 장르 채널을 가진 곳은 회사 전체 금액입니다.`));
+    else if (state.rgn) box.append(el('p', 'fx-note', `※ 평가장르는 공표집·채널평가 채널군 기준입니다. ${state.rgn} 채널을 하나라도 가진 PP를 회사 단위로 비교하며, 여러 장르 채널을 가진 MPP는 회사 전체 금액입니다. 채널평가의 콘텐츠 투자비 항목(20점)은 채널군 안에서 ‘투자비 순위×4 + 투자비 비율 순위×6’으로 등급을 매기므로, 위 ‘채널평가 투자비’ 두 항목으로 순위를 보면 예상 위치를 가늠할 수 있습니다.`));
     box.append(el('p', 'fx-note', '금액 단위는 억·조(공표집 백만원 기준 환산) · 매출·손익은 2025년 실적, 전년(2024년) 대비 · 영업이익률 = 영업손익 ÷ 매출액 · IPTV 3사 손익·자산은 통신 등 방송 외 사업이 포함된 회사 전체 수치입니다.'));
     return box;
   }
