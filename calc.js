@@ -146,7 +146,7 @@
     const mb = el('tbody'); W.forEach(([n, w, d]) => { const tr = el('tr'); tr.append(el('td', '', n), Object.assign(el('td'), { innerHTML: '<small>' + d + '</small>' }), el('td', 'r', Math.round(w * 100) + '%')); mb.append(tr); }); mo.append(mb);
     const moWrap = el('div'); moWrap.style.gridColumn = '1 / -1'; moWrap.append(mo); f.append(moWrap);
     f.append(el('div', 'cx-sub', '우리 채널 입력'));
-    const prev = fld(f, '전년 사용료(원)', '', '이 사업자에서 받은 작년 연간 금액'); prev.placeholder = '예: 100,000,000'; money(prev);
+    const prev = fld(f, '전년 사용료(원)', '', '이 사업자에서 받은 작년 연간 금액'); money(prev);
     const dIn = W.map(([n]) => fld(f, n + ' 점유율 변화(%)', '0', '작년 대비 · 모르면 0'));
     let inv = null, hb = null, pen = null;
     if (op.kind === 'cable') {
@@ -247,10 +247,10 @@
     } else {
       f.append(el('div', 'cx-sub', '① 채널군 모수 (산정서 표 · 백만원)'));
       const grp = sel(f, '채널군', [['중소', '중소'], ['대형', '대형']], '중소'); ins.push(grp);
-      const prevT = F('채널군 전년 총액', '적혀 있지 않으면 비워 두세요(보장액으로 역산)'), corr = F('1단계 보정옵션(%)', '예: -9.09'), s1 = F('1단계 채널군 총액'), gRate = F('보장률(%)', '예: 80'); gRate.value = '80';
-      const a = F('전년도 보장 (a)'), r0 = F('잔여 배분 (조정 전)'), perf = F('시청점유율 증감 성과(%)', '예: 1.34'), adj = F('조정 금액'), b = F('잔여 배분 (조정 후, b)'), s2 = F('2단계 총액 (a+b)');
+      const prevT = F('채널군 전년 총액', '적혀 있지 않으면 비워 두세요(보장액으로 역산)'), corr = F('1단계 보정옵션(%)'), s1 = F('1단계 채널군 총액'), gRate = F('보장률(%)'); gRate.value = '80';
+      const a = F('전년도 보장 (a)'), r0 = F('잔여 배분 (조정 전)'), perf = F('시청점유율 증감 성과(%)'), adj = F('조정 금액'), b = F('잔여 배분 (조정 후, b)'), s2 = F('2단계 총액 (a+b)');
       f.append(el('div', 'cx-sub', '② 채널 배분 (우리 채널)'));
-      const w1 = F('지표1 가중치(%)', '예: 시청데이터 40'), p1 = F('지표1 점유율(%)'), w2 = F('지표2 가중치(%)', '예: 평가점수 60'), p2 = F('지표2 점유율(%)'), sh = F('채널 배분 비율(%)'), chg = F('최종 증감률(%)', '예: -17.03'), pv = F('채널 전년 금액(선택)', '넣으면 금액까지 재계산', 1);
+      const w1 = F('지표1 가중치(%)'), p1 = F('지표1 점유율(%)'), w2 = F('지표2 가중치(%)'), p2 = F('지표2 점유율(%)'), sh = F('채널 배분 비율(%)'), chg = F('최종 증감률(%)'), pv = F('채널 전년 금액(선택)', '넣으면 금액까지 재계산', 1);
       w1.value = '40'; w2.value = '60';
       const run = () => {
         const L = [], G = num(gRate.value) / 100 || .8, T = num(prevT.value), A = num(a.value), S1 = num(s1.value), R0 = num(r0.value), B = num(b.value), S2 = num(s2.value), AJ = num(adj.value), PF = num(perf.value) / 100, C = num(corr.value) / 100;
