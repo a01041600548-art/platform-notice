@@ -370,7 +370,7 @@
   }
 
   // ── 실태조사·장르 ──
-  const GC = { '종교': '#7c3aed', '영화': '#dc2626', '해외드라마': '#db2777', '국내드라마': '#ea580c', '음악': '#c026d3', '스포츠': '#16a34a', '시사·경제': '#0891b2', '교양·생활정보': '#0d9488', '예능·오락': '#d97706', '취미·레저': '#65a30d', '어린이·교육': '#2563eb', '기타': '#64748b', '홈쇼핑': '#a16207', '종합편성': '#334155', '보도전문': '#475569', '유료채널': '#9333ea', '평가 외': '#94a3b8' };
+  const GC = { '종교': '#7c3aed', '영화': '#dc2626', '해외드라마': '#db2777', '국내드라마': '#ea580c', '음악': '#c026d3', '스포츠': '#16a34a', '시사·경제': '#0891b2', '교양·생활정보': '#0d9488', '예능·오락': '#d97706', '취미·레저': '#65a30d', '어린이·교육': '#2563eb', '기타': '#64748b', 'TV홈쇼핑': '#a16207', '데이터홈쇼핑': '#ca8a04', '홈쇼핑': '#a16207', '종합편성': '#334155', '보도전문': '#475569', '유료채널': '#9333ea', '평가 외': '#94a3b8' };
   const gbadge = (g, extra) => { const b = el('span', 'gb', g + (extra || '')); b.style.setProperty('--gc', GC[g] || '#64748b'); return b; };
   let GEN = null; // data.genre
   const EMPG = [['경영·임원', (e) => e[0] + e[1] + e[2], '#64748b'], ['방송직', (e) => e[3] + e[4] + e[5] + e[6] + e[7], '#c2410c'], ['기술', (e) => e[8], '#2563eb'], ['연구', (e) => e[9], '#0d9488'], ['영업·홍보', (e) => e[10], '#d97706'], ['기타', (e) => e[11], '#a3a3a3']];
@@ -511,15 +511,19 @@
 
   const GRP = [['', '전체'], ['종합편성', '종합편성'], ['보도전문', '보도전문'], ['계열', '지상파·통신 계열'], ['개별PP', '개별PP'], ['홈쇼핑', '홈쇼핑']];
   const txText = (x) => { if (!x.tx) return ''; const t = x.tx, a = []; a.push('SO ' + t[0]); if (t[1]) a.push('위성'); a.push('IPTV ' + t[3]); return a.join(' · '); };
-  const EXTRA_G = ['홈쇼핑', '종합편성', '보도전문', '유료채널', '평가 외'];
+  const EXTRA_G = ['TV홈쇼핑', '데이터홈쇼핑', '종합편성', '보도전문', '유료채널', '평가 외'];
   // 채널 목록: 평가 채널(플랫폼별 장르) + 법인 채널(송출 등)
   function channelRows(data, plat) {
     const byId = {}; data.forEach((c) => { byId[c.id] = c; });
     const rows = [], used = new Set();
     const pi = plat ? GEN.plats.findIndex((p) => p.name === plat) : -1;
     (GEN ? GEN.chans : []).forEach((e) => {
-      const g = pi >= 0 ? (e.pg[pi] >= 0 ? GEN.genres[e.pg[pi]] : null) : e.g;
-      const c = e.cid ? byId[e.cid] : null; const x = c ? (c.ch || []).find((q) => q.n === e.n) : null;
+      const c0 = e.cid ? byId[e.cid] : null; const x0 = c0 ? (c0.ch || []).find((q) => q.n === e.n) : null;
+      // 플랫폼을 고르면 그 플랫폼의 채널평가 채널군(pg)을 쓰고, 플랫폼을 안 고른 기본 보기에서는
+      // 법인 자료의 장르(x.gn)를 우선한다. 채널평가 자료에는 종편 TV조선이 '예능·오락' 채널군으로
+      // 들어가 있어, 기본 보기에서 종합편성 묶음에 TV조선이 빠져 보이는 문제가 있었다.
+      const g = pi >= 0 ? (e.pg[pi] >= 0 ? GEN.genres[e.pg[pi]] : null) : ((x0 && x0.gn) || e.g);
+      const c = c0; const x = x0;
       if (c && x) used.add(c.id + '|' + x.n);
       if (!g) return;
       rows.push({ n: e.n, g, gw: e.gw, c, x: x || {} });
