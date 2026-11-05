@@ -444,6 +444,31 @@
     .pane > .sec:first-child > div:first-child > h2 { font-size: 1.35em; }
   }
 
+  /* 공지 내용 정리 팝업 */
+  dialog.nt-dialog { border: 0; border-radius: 18px; padding: 0; width: min(94vw, 46em); max-height: 86vh; color: var(--ink); background: var(--card); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  dialog.nt-dialog::backdrop { background: rgba(10,10,10,.45); }
+  .nt-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .8em; padding: 1.1em 1.3em .8em; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
+  .nt-head h3 { margin: 0; font-size: 1.15em; font-weight: 800; line-height: 1.4; }
+  .nt-head p { margin: .3em 0 0; font-size: .86em; color: var(--ink2); font-weight: 700; }
+  .nt-x { font: inherit; min-width: 38px; min-height: 38px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; flex: none; }
+  .nt-body { padding: 1.1em 1.3em 1.5em; overflow-y: auto; display: flex; flex-direction: column; gap: .8em; }
+  .nt-intro { margin: 0; font-size: 1em; line-height: 1.65; }
+  .nt-fact { display: flex; gap: .7em; align-items: baseline; font-size: .95em; }
+  .nt-fact > span { min-width: 5.5em; color: var(--ink2); font-weight: 700; font-size: .9em; }
+  .nt-fact > b { font-weight: 800; }
+  .nt-cap { font-size: .86em; font-weight: 800; color: var(--ink2); margin-top: .2em; }
+  .nt-t { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+  .nt-t th, .nt-t td { padding: .55em .7em; border-bottom: 1px solid var(--line); text-align: left; font-size: .95em; }
+  .nt-t th { font-size: .82em; font-weight: 800; color: var(--ink2); border-bottom: 2px solid var(--line); white-space: nowrap; }
+  .nt-t td:not(:first-child) { font-weight: 800; white-space: nowrap; }
+  .nt-note { margin: 0; font-size: .9em; color: var(--ink2); line-height: 1.6; padding: .7em .85em; border-radius: 10px; background: color-mix(in srgb, var(--ink) 4%, var(--card)); }
+  .nt-src { margin: 0; font-size: .8em; color: var(--ink2); }
+  .nt-foot { padding-top: .3em; }
+  .c-openable { cursor: pointer; }
+  .c-openable:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .go.detail { border-color: var(--c0); color: var(--c0); font: inherit; font-weight: 700; cursor: pointer; background: color-mix(in srgb, var(--c0) 8%, var(--card)); }
+  @media (max-width: 640px) { dialog.nt-dialog { width: 100vw; max-width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; margin: auto auto 0; } }
+
   /* v5 finance refinements */
   /* 카드 수가 열 수로 나눠떨어지지 않으면 마지막 줄에 테두리만 있는 빈 칸이 남는다.
      flex로 깔면 마지막 줄 카드가 남은 폭을 나눠 가져 빈 상자가 생기지 않는다. */
@@ -721,9 +746,61 @@
     if (topicCell) { const c = el('div', 'c-topic'); c.append(topicCell); d.append(c); }
     const p = el('div', 'c-plat'); if (fields.group) p.append(el('span', 'grp', fields.group)); p.append(fields.plat);
     const t = el('div', 'c-title', r.title);
-    const act = el('div', 'c-act'); act.append(goBtn(r.url, fields.kind));
+    const act = el('div', 'c-act');
+    // 공지 본문을 읽어 정리해 둔 게 있으면 제목을 눌러 팝업으로 본다
+    if (fields.kind === 'notice' && r.detail) {
+      t.classList.add('c-openable');
+      t.tabIndex = 0; t.setAttribute('role', 'button');
+      t.title = '내용 정리 보기';
+      const open = () => openNotice(r);
+      t.addEventListener('click', open);
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      const b = el('button', 'go detail', '내용 정리 보기'); b.type = 'button'; b.addEventListener('click', open);
+      act.append(b);
+    }
+    act.append(goBtn(r.url, fields.kind));
     d.append(p, el('div', 'c-date', fmt(r.date)), t, el('div', 'c-sum', fields.sum), el('div', 'c-chk', fields.chk), act);
     return d;
+  }
+
+  // 공지 내용 정리 팝업
+  function openNotice(r) {
+    let dlg = $('nt-dialog');
+    if (!dlg) {
+      dlg = document.createElement('dialog'); dlg.id = 'nt-dialog'; dlg.className = 'nt-dialog';
+      document.body.appendChild(dlg);
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    }
+    const dt = r.detail || {};
+    dlg.replaceChildren();
+    const head = el('div', 'nt-head');
+    const ht = el('div');
+    ht.append(el('h3', '', r.title));
+    ht.append(el('p', '', [r.platform, fmt(r.date), r.topic].filter(Boolean).join(' · ')));
+    head.append(ht);
+    const x = el('button', 'nt-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '닫기');
+    x.addEventListener('click', () => dlg.close()); head.append(x);
+    const body = el('div', 'nt-body');
+    if (dt.intro) body.append(el('p', 'nt-intro', dt.intro));
+    (dt.facts || []).forEach((f) => {
+      const row = el('div', 'nt-fact'); row.append(el('span', '', f[0]), el('b', '', f[1])); body.append(row);
+    });
+    if (dt.table && dt.table.rows && dt.table.rows.length) {
+      if (dt.table.caption) body.append(el('div', 'nt-cap', dt.table.caption));
+      const t = el('table', 'nt-t');
+      const thead = el('thead'); const htr = el('tr');
+      (dt.table.cols || []).forEach((c) => htr.append(el('th', '', c)));
+      thead.append(htr); t.append(thead);
+      const tb = el('tbody');
+      dt.table.rows.forEach((rw) => { const tr = el('tr'); rw.forEach((cell) => tr.append(el('td', '', String(cell)))); tb.append(tr); });
+      t.append(tb); body.append(t);
+    }
+    if (dt.note) body.append(el('p', 'nt-note', dt.note));
+    body.append(el('p', 'nt-src', '정리 근거: ' + (dt.source || '공지 원문') + (dt.readAt ? ' · 확인 ' + dt.readAt : '')));
+    const a = goBtn(r.url, 'notice');
+    if (a.nodeName === 'A') { const f = el('div', 'nt-foot'); f.append(a); body.append(f); }
+    dlg.append(head, body);
+    dlg.showModal();
   }
   let LISTS = new Set();
   function goBtn(u, kind) {
