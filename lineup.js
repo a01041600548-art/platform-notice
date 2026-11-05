@@ -173,6 +173,18 @@
   .lu-cd-t td.n { font-weight: 800; font-size: 1.05em; text-align: center; white-space: nowrap; }
   .lu-cd-t td.tier { text-align: right; color: var(--lu-muted); white-space: nowrap; }
   .lu-cd-t td.tier b { color: var(--lu-accent); font-weight: 800; }
+  .lu-cd-sum { display: flex; flex-wrap: wrap; gap: .4em; margin: 0 0 .2em; }
+  .lu-cd-chip { font-size: .82em; font-weight: 800; padding: .25em .7em; border-radius: 999px; background: color-mix(in srgb, var(--lu-accent) 12%, var(--lu-card)); color: var(--lu-accent); }
+  .lu-cd-t td.nums { display: flex; flex-wrap: wrap; gap: .4em; justify-content: flex-end; padding: .5em .2em; }
+  .lu-cd-unit { display: inline-flex; align-items: baseline; gap: .3em; padding: .2em .6em; border-radius: 8px; background: color-mix(in srgb, var(--lu-ink) 5%, var(--lu-card)); white-space: nowrap; }
+  .lu-cd-unit .lu-cd-t2 { font-style: normal; font-size: .72em; font-weight: 800; color: var(--lu-muted); }
+  .lu-cd-unit b { font-size: 1.02em; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .lu-cd-unit small { font-size: .72em; color: var(--lu-muted); }
+  .lu-cd-unit small.unk { color: var(--warn, #a16207); }
+  .lu-pg { display: inline-block; font-size: .68em; font-weight: 800; padding: .1em .5em; border-radius: 999px; color: #fff; background: var(--pgc, #64748b); }
+  .lu-regs label.lu-reg1 { padding-right: .7em; }
+  .lu-regs label.lu-reg1 span { font-weight: 700; color: var(--lu-muted); }
+  .lu-reg1-q { font-style: normal; display: inline-flex; align-items: center; justify-content: center; width: 1.25em; height: 1.25em; border-radius: 50%; font-size: .78em; font-weight: 800; background: color-mix(in srgb, var(--lu-muted) 22%, transparent); color: var(--lu-muted); cursor: help; }
   .lu-empty-list { font-variant-numeric: tabular-nums; word-break: break-all; }
 
   /* ---- F. 업무 화면 개편 — 상단 바 ---- */
@@ -253,6 +265,11 @@
   `;
   function addStyle() { if (document.getElementById('lu-style')) return; const s = el('style'); s.id = 'lu-style'; s.textContent = CSS; document.head.appendChild(s); }
   const tlabel = (p) => p.kind === '케이블' ? p.type : p.kind;
+  // 사업자 구분 — 케이블은 MSO(복수 방송구역을 거느린 5개사)와 개별SO로 나눈다
+  const MSO = ['LG헬로비전', 'SK브로드밴드', '딜라이브', 'CMB', 'HCN'];
+  const GORDER_PG = ['IPTV', 'MSO', '개별SO', '위성'];
+  const platGroup = (p) => p.kind === 'IPTV' ? 'IPTV' : p.kind === '위성' ? '위성' : (MSO.includes(p.op) ? 'MSO' : '개별SO');
+  const PGC = { 'IPTV': '#2563eb', 'MSO': '#7c3aed', '개별SO': '#0d9488', '위성': '#d97706' };
   const tbadge = (p) => { const b = el('span', 'tb', tlabel(p)); b.style.setProperty('--tc', TC[tlabel(p)] || '#64748b'); return b; };
   const shortReg = (r) => (r || '').replace(/방송$/, '');
   const numv = (v) => { if (!v) return 1e9; const m = String(v[0]).match(/^(\d+)(?:-(\d+))?/); return m ? +m[1] + (m[2] ? +m[2] / 100 : 0) : 1e9; };
@@ -372,23 +389,70 @@
     return s;
   }
 
+  // 채널 하나가 어디에 송출되는지 — 사업자군(IPTV→MSO→개별SO→위성) 순으로,
+  // 송출되는 곳만, 한 사업자·구역을 한 줄로 묶어 디지털/8VSB/IP 번호를 나란히 보여준다.
+  const CT = ['디지털', '8VSB', 'IP'];
   function channelDetailBody(D, c) {
     const wrap = el('div', 'lu-dialog-body');
     const rows = D.plats.map((p, i) => ({ p, i, v: c.c[i] })).filter((x) => x.v);
-    if (!rows.length) { wrap.append(el('p', 'lu-note', '편성된 플랫폼이 없습니다.')); return wrap; }
-    const byOp = {};
-    rows.forEach((r) => { (byOp[r.p.op] = byOp[r.p.op] || []).push(r); });
-    Object.keys(byOp).sort((a, b) => a.localeCompare(b, 'ko')).forEach((op) => {
-      const sec = el('div', 'lu-cd-op'); sec.append(el('h4', '', op));
+    if (!rows.length) { wrap.append(el('p', 'lu-note', '송출되는 곳이 없습니다. (미편성 확정이 아니라, 아직 확인되지 않은 라인업일 수 있습니다)')); return wrap; }
+
+    const sum = el('p', 'lu-cd-sum');
+    GORDER_PG.forEach((g) => {
+      const ops = new Set(rows.filter((r) => platGroup(r.p) === g).map((r) => r.p.op));
+      if (ops.size) sum.append(el('span', 'lu-cd-chip', `${g} ${ops.size}개사`));
+    });
+    wrap.append(sum);
+
+    GORDER_PG.forEach((g) => {
+      const grows = rows.filter((r) => platGroup(r.p) === g);
+      if (!grows.length) return;
+      const sec = el('div', 'lu-cd-op');
+      sec.append(el('h4', '', g + ` · ${new Set(grows.map((r) => r.p.op)).size}개사`));
+      // 사업자 + 구역 단위로 묶기
+      const keyOf = (r) => r.p.op + '|' + (r.p.region || '');
+      const groups = [];
+      const map = {};
+      grows.forEach((r) => { const k = keyOf(r); if (!map[k]) { map[k] = { op: r.p.op, region: r.p.region, items: [] }; groups.push(map[k]); } map[k].items.push(r); });
+      groups.sort((a, b) => a.op.localeCompare(b.op, 'ko') || (a.region || '').localeCompare(b.region || '', 'ko'));
+      // 구역이 달라도 번호·상품이 같으면 한 줄로 묶는다(딜라이브 15개 구역이 모두 같은 번호인 경우 등)
+      const sig = (gr) => gr.items.slice().sort((a, b) => CT.indexOf(tlabel(a.p)) - CT.indexOf(tlabel(b.p)))
+        .map(({ p, v }) => tlabel(p) + ':' + v[0] + ':' + v[1]).join('/');
+      const merged = []; const mmap = {};
+      groups.forEach((gr) => {
+        const k = gr.op + '§' + sig(gr);
+        if (!mmap[k]) { mmap[k] = { op: gr.op, regions: [], items: gr.items }; merged.push(mmap[k]); }
+        if (gr.region) mmap[k].regions.push(gr.region);
+      });
+      const regTotal = {};
+      groups.forEach((gr) => { if (gr.region) regTotal[gr.op] = (regTotal[gr.op] || 0) + 1; });
       const t = el('table', 'lu-cd-t');
-      byOp[op].sort((a, b) => tlabel(a.p).localeCompare(tlabel(b.p), 'ko') || (a.p.region || '').localeCompare(b.p.region || '', 'ko')).forEach(({ p, v }) => {
+      merged.forEach((gr) => {
         const tr = el('tr');
-        const td1 = el('td'); td1.append(tbadge(p)); if (p.region) td1.append(document.createTextNode(' '), el('span', 'rb', shortReg(p.region)));
-        const td2 = el('td', 'n', v[0] + '번');
-        const td3 = el('td', 'tier');
-        const k = tierKind(v);
-        td3.append(el('b', '', k === 'base' ? '최저 포함' : k === 'unk' ? '상품 미확인' : '고티어'), document.createTextNode(' · ' + (k === 'higher' ? tierText(p, v) : k === 'unk' ? '추정 안 함' : '기본 상품')));
-        tr.append(td1, td2, td3); t.append(tr);
+        const td1 = el('td');
+        td1.append(el('b', '', gr.op));
+        if (gr.regions.length === 1) td1.append(document.createTextNode(' '), el('span', 'rb', shortReg(gr.regions[0])));
+        else if (gr.regions.length > 1) {
+          const all = gr.regions.length === regTotal[gr.op];
+          const r = el('span', 'rb', all ? `${gr.regions.length}개 구역 전부` : `${gr.regions.length}개 구역`);
+          r.title = gr.regions.join(', ');
+          td1.append(document.createTextNode(' '), r);
+        }
+        const td2 = el('td', 'nums');
+        // 케이블은 디지털/8VSB/IP를 한 줄에, IPTV·위성은 번호만
+        const sorted = gr.items.slice().sort((a, b) => CT.indexOf(tlabel(a.p)) - CT.indexOf(tlabel(b.p)));
+        sorted.forEach(({ p, v }) => {
+          const unit = el('span', 'lu-cd-unit');
+          const lab = tlabel(p);
+          if (CT.includes(lab)) unit.append(el('i', 'lu-cd-t2', lab));
+          unit.append(el('b', '', v[0] + '번'));
+          const k = tierKind(v);
+          if (k === 'higher') { const pn = prodOf(p, v); if (pn) unit.append(el('small', '', pn + '부터')); }
+          else if (k === 'unk') unit.append(el('small', 'unk', '상품 미확인'));
+          else unit.append(el('small', '', '최저 상품'));
+          td2.append(unit);
+        });
+        tr.append(td1, td2); t.append(tr);
       });
       sec.append(t); wrap.append(sec);
     });
@@ -506,14 +570,28 @@
 
   function regionPickers(D, G, state, rerender, onlyOps) {
     const wrap = el('div', 'lu-regs');
+    // 방송구역이 여럿인 사업자는 고를 수 있게, 한 구역만 수집한 곳(LG헬로비전 등)은
+    // 선택지 없이 그 구역을 밝혀 둔다 — 조용히 빠지면 누락처럼 보인다
     let ops = [...new Set(G.filter((g) => g.idx.length > 1).map((g) => g.op))];
     if (onlyOps) ops = ops.filter((op) => onlyOps.has(op));
+    let single = [...new Set(G.filter((g) => g.idx.length === 1 && g.kind === '케이블'
+      && D.plats[g.idx[0]].region && D.plats[g.idx[0]].region !== 'SO 공통').map((g) => g.op))]
+      .filter((op) => !ops.includes(op));
+    if (onlyOps) single = single.filter((op) => onlyOps.has(op));
     ops.forEach((op) => {
       const regs = [...new Set(D.plats.filter((p) => p.op === op && p.kind === '케이블' && p.region && p.region !== 'SO 공통').map((p) => p.region))];
       const lab = el('label'); lab.append(op);
       const s = el('select'); regs.forEach((r) => s.append(new Option(r, r))); s.value = state.reg[op] || regs[0];
       s.addEventListener('change', () => { state.reg[op] = s.value; rerender(); });
       lab.append(s); wrap.append(lab);
+    });
+    single.forEach((op) => {
+      const p = D.plats.find((x) => x.op === op && x.kind === '케이블' && x.region);
+      if (!p) return;
+      const lab = el('label', 'lu-reg1'); lab.append(op);
+      const s = el('span', '', p.region + ' 기준');
+      s.title = op + '은(는) 방송구역별 채널표가 공개되지 않아 ' + p.region + ' 구역 하나만 수집했습니다. 다른 구역은 번호가 다를 수 있습니다.';
+      lab.append(s, el('i', 'lu-reg1-q', '?')); wrap.append(lab);
     });
     return wrap;
   }
@@ -549,7 +627,8 @@
     const wrap = el('div', 'lu-chips');
     const items = [];
     if (state.q) items.push(['검색 "' + state.q + '"', () => { state.q = ''; }]);
-    if (state.k) items.push([(state.k === 'IPTV' || state.k === '위성' ? state.k : '케이블 ' + state.k), () => { state.k = ''; }]);
+    if (state.pg) items.push(['사업자 ' + state.pg, () => { state.pg = ''; state.cols = null; }]);
+    if (state.k) items.push(['케이블 ' + state.k, () => { state.k = ''; state.cols = null; }]);
     if (state.g) items.push(['장르 ' + state.g, () => { state.g = ''; }]);
     if (state.pf) items.push([state.pf === 'known' ? '상품 단계 확인됨만' : '상품 미확인만', () => { state.pf = ''; }]);
     if (state.vf) items.push(['검증상태 ' + (STATUS_META[state.vf] || {}).label, () => { state.vf = ''; }]);
@@ -561,7 +640,7 @@
       c.append(x); wrap.append(c);
     });
     const reset = el('button', 'lu-reset', '전체 초기화'); reset.type = 'button';
-    reset.addEventListener('click', () => { state.q = ''; state.k = ''; state.g = ''; state.pf = ''; state.vf = ''; state.allCols = false; state.cols = null; rerender(); });
+    reset.addEventListener('click', () => { state.q = ''; state.k = ''; state.pg = ''; state.g = ''; state.pf = ''; state.vf = ''; state.allCols = false; state.cols = null; rerender(); });
     wrap.append(reset);
     return wrap;
   }
@@ -588,7 +667,7 @@
   function matrix(D, state, rerender) {
     const box = el('div', 'lu');
     const G = groupsOf(D);
-    const cols0 = G.filter((g) => !state.k || g.type === state.k);
+    const cols0 = G.filter((g) => (!state.k || g.type === state.k) && (!state.pg || platGroup(g.p) === state.pg));
     if (!state.cols) state.cols = cols0.slice(0, 5).map((g) => g.key);
     const cols1 = state.allCols ? cols0 : cols0.filter((g) => (state.cols || []).includes(g.key));
     const cols = (cols1.length ? cols1 : cols0.slice(0, 5)).map((g) => ({ g, i: pick(D, g, state) }));
@@ -599,10 +678,9 @@
     const exportBtn = el('button', 'lu-export', '⬇ CSV 내보내기'); exportBtn.type = 'button';
     topbar.append(exportBtn);
     box.append(topbar);
-    box.append(statusBar(D, state, rerender));
 
     const bar = el('div', 'lu-card lu-bar');
-    const fold = el('div', 'lu-fold'); const sumTxt = [state.k ? (state.k === 'IPTV' || state.k === '위성' ? state.k : '케이블 ' + state.k) : '전체 유형', state.g || '전체 장르', state.q ? '"' + state.q + '"' : ''].filter(Boolean).join(' · ');
+    const fold = el('div', 'lu-fold'); const sumTxt = [state.pg || '전체 사업자', state.k ? '케이블 ' + state.k : '', state.g || '전체 장르', state.q ? '"' + state.q + '"' : ''].filter(Boolean).join(' · ');
     const fb = el('button', '', state.fold ? '필터 펼치기 ▾' : '필터 접기 ▴'); fb.type = 'button'; fb.addEventListener('click', () => { state.fold = !state.fold; rerender(); });
     fold.append(el('b', '', '보기 조건: ' + sumTxt), fb); bar.append(fold);
     if (state.fold) { box.append(bar); }
@@ -621,9 +699,19 @@
 
     // 도구막대 2행 — 방식 · 지역 · 상품 · 검증상태
     const r2 = el('div', 'lu-tool2');
-    const fType = el('div', 'lu-fld'); fType.append(el('span', '', '방식'));
+    // 사업자 구분(IPTV·MSO·개별SO·위성)과 케이블 상품 유형(디지털·8VSB·IP)을 축으로 나눈다
+    const fGrp = el('div', 'lu-fld'); fGrp.append(el('span', '', '사업자 구분'));
+    const gt = el('div', 'lu-type');
+    [['', '전체'], ...GORDER_PG.map((g) => [g, g])].forEach(([k, l]) => {
+      const n = k ? new Set(D.plats.filter((p) => platGroup(p) === k).map((p) => p.op)).size : 0;
+      const b = el('button', '', l + (n ? ' ' + n : '')); b.type = 'button'; b.style.setProperty('--tc', PGC[k] || '#334155');
+      b.setAttribute('aria-pressed', String(state.pg === k));
+      b.addEventListener('click', () => { state.pg = k; state.cols = null; rerender(); }); gt.append(b);
+    });
+    fGrp.append(gt); r2.append(fGrp);
+    const fType = el('div', 'lu-fld'); fType.append(el('span', '', '케이블 상품'));
     const tt = el('div', 'lu-type');
-    [['', '전체'], ['IPTV', 'IPTV'], ['위성', '위성'], ['디지털', '케이블 디지털'], ['8VSB', '케이블 8VSB'], ['IP', '케이블 IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.k === k)); b.addEventListener('click', () => { state.k = k; rerender(); }); tt.append(b); });
+    [['', '전체'], ['디지털', '디지털'], ['8VSB', '8VSB'], ['IP', 'IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.k === k)); b.addEventListener('click', () => { state.k = k; state.cols = null; rerender(); }); tt.append(b); });
     fType.append(tt); r2.append(fType);
     const fReg = el('div', 'lu-fld'); fReg.append(el('span', '', '지역')); fReg.append(regionPickers(D, G, state, rerender, colOps)); r2.append(fReg);
     const fProd = el('div', 'lu-fld'); fProd.append(el('span', '', '상품'));
@@ -697,7 +785,9 @@
 
       const card = el('div', 'lu-card lu-wrap'); const t = el('table', 'lu-t' + (state.dense ? ' dense' : ''));
       const hr = el('tr'); hr.append(el('th', 'ch', '채널'));
-      cols.forEach(({ g, i }) => { const p = D.plats[i]; const th = el('th', 'gl'); th.append(tbadge(p), el('div', '', g.op)); if (p.region) th.append(el('span', 'rb', shortReg(p.region))); hr.append(th); });
+      cols.forEach(({ g, i }) => { const p = D.plats[i]; const th = el('th', 'gl');
+        const pg = el('span', 'lu-pg', platGroup(p)); pg.style.setProperty('--pgc', PGC[platGroup(p)] || '#64748b');
+        th.append(pg); if (p.kind === '케이블') th.append(tbadge(p)); th.append(el('div', '', g.op)); if (p.region) th.append(el('span', 'rb', shortReg(p.region))); hr.append(th); });
       const thd = el('thead'); thd.append(hr); t.append(thd);
       const tb = el('tbody');
       rows.slice(0, state.lim).forEach((c) => {
