@@ -276,10 +276,41 @@
   // ---- E. 근거 레코드 어댑터 ----
   // 지시문 E의 필드 목록으로 정규화한다. evidence에 실제로 있는 값만 옮기고,
   // 갖고 있지 않은 근거(파일 해시, 인쇄 쪽수, 원문 발췌 좌표 등)는 null로 둔다.
+  // 플랫폼 단위 원문 대조 결과(verified/verifiedSrc) 조회용 — 매번 배열을 훑지 않도록 Set으로 캐시
+  let VSET = null;
+  function verifiedSet(D, platIdx) {
+    if (!VSET) {
+      VSET = {};
+      Object.keys(D.verified || {}).forEach((k) => { VSET[k] = new Set(D.verified[k]); });
+    }
+    return VSET[platIdx] || null;
+  }
   function evRecord(D, platIdx, chan, v) {
     const p = D.plats[platIdx] || {};
     const raw = (D.evidence && D.evidence[platIdx + '|' + chan.n]) || null;
-    const status = raw ? raw.status : (v ? 'present_unverified' : 'unknown');
+    // 셀 단위 예외 기록이 우선, 없으면 플랫폼 단위 원문 대조 결과를 본다
+    const vs = verifiedSet(D, platIdx);
+    const vsrc = (D.verifiedSrc && D.verifiedSrc[platIdx]) || null;
+    const byList = !raw && v && vs && vs.has(chan.n) ? vsrc : null;
+    const status = raw ? raw.status : (byList ? 'verified_present' : (v ? 'present_unverified' : 'unknown'));
+    if (byList) {
+      return {
+        operatorId: p.op || null, serviceType: tlabel(p) || null, regionId: p.region || null,
+        audienceType: null, channelId: chan.n, canonicalName: chan.n, rawName: chan.n,
+        channelNumber: String(v[0]),
+        quality: null,
+        productIds: tierKind(v) === 'unk' ? null : [v[1]],
+        paidOption: null, regionalCondition: null, status,
+        sourceId: byList.sourceId || null, sourceUrl: null,
+        sourceFileHash: byList.sourceFileHash || null,
+        pdfPage: (byList.pdfPages || []).join(', ') || null,
+        printedPage: null, tableLabel: byList.tableLabel || null, sourceQuote: null,
+        effectiveDate: byList.effectiveDate || null, publishedDate: null,
+        collectedAt: p.date || null, verifiedAt: byList.verifiedAt || null,
+        extractionMethod: byList.extractionMethod || null,
+        reviewNote: byList.scopeLabel || null, conflictWith: null,
+      };
+    }
     return {
       operatorId: p.op || null,
       serviceType: tlabel(p) || null,
@@ -325,12 +356,19 @@
   function statusCounts(D) {
     const c = { verified_present: 0, source_conflict: 0, extraction_failed: 0, fetch_failed: 0 };
     Object.values(D.evidence || {}).forEach((e) => { if (c[e.status] !== undefined) c[e.status]++; });
+    // 플랫폼 단위 원문 대조로 확인된 셀도 함께 센다(셀 단위 예외 기록과 중복되지 않게 제외)
+    Object.keys(D.verified || {}).forEach((pi) => {
+      (D.verified[pi] || []).forEach((n) => { if (!(D.evidence || {})[pi + '|' + n]) c.verified_present++; });
+    });
     return c;
   }
   // 특정 검증상태를 가진 (채널명) 집합 — 상태 요약 바 클릭 시 행 필터용
   function namesWithStatus(D, status) {
     const s = new Set();
     Object.entries(D.evidence || {}).forEach(([k, e]) => { if (e.status === status) s.add(k.split('|').slice(1).join('|')); });
+    if (status === 'verified_present') {
+      Object.keys(D.verified || {}).forEach((pi) => (D.verified[pi] || []).forEach((n) => s.add(n)));
+    }
     return s;
   }
 
@@ -530,9 +568,11 @@
 
   function statusBar(D, state, rerender) {
     const counts = statusCounts(D);
-    const checked = Object.keys(D.evidence || {}).length;
+    const checked = Object.values(counts).reduce((a, b) => a + b, 0);
+    const platDone = Object.keys(D.verified || {}).length;
+    const platAll = D.plats.length;
     const card = el('div', 'lu-card lu-stat'); card.setAttribute('role', 'group'); card.setAttribute('aria-label', '검증 상태 요약 — 클릭하면 해당 상태로 걸러 봅니다');
-    card.append(el('p', 'lu-stat-cap', `전체 ${D.chans.length}개 채널 중 지금까지 원문 PDF·HWP와 직접 대조를 마친 ${checked}건의 결과입니다. 나머지는 아직 대조 전이라 표에 "─"로 비어 보입니다 — 확인이 안 됐다는 뜻이지 그 채널이 없다는 뜻이 아닙니다.`));
+    card.append(el('p', 'lu-stat-cap', `라인업 ${platAll}개 가운데 ${platDone}개를 각사 이용약관 원문(PDF)과 번호 단위로 대조했고, 그 결과 ${checked.toLocaleString()}칸이 확인됐습니다. 아직 대조하지 않은 칸은 표에 "─"로 비어 보입니다 — 확인이 안 됐다는 뜻이지 그 채널이 없다는 뜻이 아닙니다.`));
     [['verified_present', 'd-vp'], ['source_conflict', 'd-vc'], ['extraction_failed', 'd-ef'], ['fetch_failed', 'd-ff']].forEach(([key, dot]) => {
       const meta = STATUS_META[key];
       const b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.vf === key));
