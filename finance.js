@@ -231,9 +231,65 @@
     ];
     return [...pl.filter((c) => c.media !== 'SO').map(one), ...Object.keys(MSO).map(mso), ...indiv];
   }
+  // 사람 수 표기 — 큰 숫자는 "912만 3,463명"처럼 만 단위로 끊어 읽기 쉽게
+  function people(n) {
+    if (n == null) return '—';
+    if (n >= 10000) { const m = Math.floor(n / 10000), r = n % 10000; return m.toLocaleString() + '만' + (r ? ' ' + r.toLocaleString() : '') + '명'; }
+    return n.toLocaleString() + '명';
+  }
+  // 유료방송 가입자 — 공표집 수신료매출과 묶어 가입자당 월 수신료까지 보여준다
+  function subscribers(data) {
+    if (!SUBS) return null;
+    const box = el('div');
+    const h = el('div', 'fx-h');
+    h.append(el('h2', '', '유료방송 가입자'), el('span', '', `${SUBS.asOf} 기준 · ${SUBS.source} (${SUBS.published} 공표)`));
+    box.append(h);
+    const g = el('div', 'fx-grid');
+    const dTot = SUBS.total - SUBS.prevTotal;
+    const card = (label, n, share, d) => {
+      const c = el('div', 'fx-card');
+      const top = el('div', 'fx-row'); top.append(el('span', 'fx-k', label));
+      if (d != null) { const s = el('span', 'fx-chg ' + (d >= 0 ? 'up' : 'dn'), (d >= 0 ? '+' : '') + d.toLocaleString()); top.append(s); }
+      // 큰 숫자가 두 줄로 접히지 않게 카드에는 만 단위만, 정확한 수는 아래 줄에
+      const big = n >= 10000 ? Math.floor(n / 10000).toLocaleString() + '만명' : n.toLocaleString() + '명';
+      c.append(top, el('div', 'fx-big', big),
+        el('span', 'fx-k', n.toLocaleString() + '명' + (share != null ? ' · 점유율 ' + share.toFixed(2) + '%' : ' · 직전 반기 대비')));
+      g.append(c);
+    };
+    card('전체', SUBS.total, null, dTot);
+    SUBS.media.forEach((m) => card(m.k === '위성방송' ? '위성' : m.k, m.n, m.share, m.d));
+    box.append(g);
+
+    // 사업자별 — 공표집 수신료매출을 가입자로 나눠 월 환산
+    const byGrp = {};
+    data.forEach((c) => {
+      if (!PLAT.includes(c.media)) return;
+      const k = subGroup(c);
+      byGrp[k] = (byGrp[k] || 0) + ((c.y && c.y[Y] && c.y[Y].subfee) || 0);
+    });
+    const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table'); const hr = el('tr');
+    ['사업자', '매체', '가입자', '점유율', '수신료매출(2025년)', '가입자당 월 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
+    SUBS.ops.forEach((o) => {
+      const fee = byGrp[o.grp];
+      const per = fee ? Math.round(fee * 1000000 / o.subs / 12) : null;
+      const tr = el('tr');
+      tr.append(el('td', '', o.n), el('td', '', o.media === '위성방송' ? '위성' : o.media),
+        el('td', '', o.subs.toLocaleString()), el('td', '', o.share.toFixed(2) + '%'),
+        el('td', '', fee ? money(fee) : '—'),
+        el('td', '', per ? per.toLocaleString() + '원' : '—'));
+      tb.append(tr);
+    });
+    t.append(tb); tw.append(t); box.append(tw);
+    box.append(el('p', 'fx-note', '※ ' + SUBS.note));
+    box.append(el('p', 'fx-note', '※ 가입자당 월 수신료는 공표가 아니라 계산값입니다 — 2025년 재산상황 공표집의 연간 수신료매출을 위 가입자 수로 나눠 12로 나눈 값이라, 매출(연간)과 가입자(반기 말)의 기준 시점이 다릅니다. 사업자 묶음은 계열 SO 법인을 합산했습니다.'));
+    return box;
+  }
+
   function platforms(data, state, rerender) {
     const box = el('section', 'fx');
     const pl = data.filter((c) => PLAT.includes(c.media));
+    const sb = subscribers(data); if (sb) box.append(sb);
     // 1) 전체 요약
     const h1 = el('div', 'fx-h'); h1.append(el('h2', '', '유료방송 전체 수신료와 PP 사용료'), el('span', '', 'IPTV·SO·위성 합계, 2025년 실적 · 전년 대비'));
     const g = el('div', 'fx-grid');
@@ -372,7 +428,15 @@
   // ── 실태조사·장르 ──
   const GC = { '종교': '#7c3aed', '영화': '#dc2626', '해외드라마': '#db2777', '국내드라마': '#ea580c', '음악': '#c026d3', '스포츠': '#16a34a', '시사·경제': '#0891b2', '교양·생활정보': '#0d9488', '예능·오락': '#d97706', '취미·레저': '#65a30d', '어린이·교육': '#2563eb', '기타': '#64748b', 'TV홈쇼핑': '#a16207', '데이터홈쇼핑': '#ca8a04', '홈쇼핑': '#a16207', '종합편성': '#334155', '보도전문': '#475569', '유료채널': '#9333ea', '평가 외': '#94a3b8' };
   const gbadge = (g, extra) => { const b = el('span', 'gb', g + (extra || '')); b.style.setProperty('--gc', GC[g] || '#64748b'); return b; };
-  let GEN = null; // data.genre
+  let GEN = null;
+  let SUBS = null; // data.subs — 방미통위 유료방송 가입자 수·점유율
+  // 공표집 법인을 가입자 공표 단위(계열)로 묶는다
+  const MSO_PREFIX = { '엘지헬로비전': '엘지헬로비전(SO)', '딜라이브': '딜라이브(SO)', '에스케이브로드밴드': '에스케이브로드밴드(SO)', '케이티에이치씨엔': '케이티에이치씨엔(SO)', '씨엠비': '씨엠비(SO)' };
+  function subGroup(c) {
+    if (c.media === 'IPTV' || c.media === '위성방송') return c.name;
+    const k = Object.keys(MSO_PREFIX).find((p) => c.name.startsWith(p));
+    return k ? MSO_PREFIX[k] : '개별SO';
+  }
   const EMPG = [['경영·임원', (e) => e[0] + e[1] + e[2], '#64748b'], ['방송직', (e) => e[3] + e[4] + e[5] + e[6] + e[7], '#c2410c'], ['기술', (e) => e[8], '#2563eb'], ['연구', (e) => e[9], '#0d9488'], ['영업·홍보', (e) => e[10], '#d97706'], ['기타', (e) => e[11], '#a3a3a3']];
   const SCOL = ['#c2410c', '#2563eb', '#16a34a', '#a855f7'], SN = ['자체제작', '외주제작', '국내구매', '국외구매'];
   function meter(label, n, max) {
@@ -750,7 +814,7 @@
 
   window.renderFinance = function (root, raw) {
     addStyle();
-    const data = Array.isArray(raw) ? raw : raw.companies; GEN = Array.isArray(raw) ? null : raw.genre;
+    const data = Array.isArray(raw) ? raw : raw.companies; GEN = Array.isArray(raw) ? null : raw.genre; SUBS = Array.isArray(raw) ? null : raw.subs;
     const state = root.__fx || (root.__fx = { view: 'industry', q: '', media: '', open: null, limit: 30, cg: '', cq: '', copen: null, climit: 30, pm: 'subfee', pu: 'biz', pexp: {}, cm: 'corp', cp: '', gf: '', cs: 'so', chlimit: 60, rm: 'brev', rmd: 'PP', rgr: '', rsz: '', ro: 'val', rq: '', rlim: 50, ru: 'co', rgn: '' });
     const rerender = () => window.renderFinance(root, raw); state.redraw = rerender;
     const wrap = el('div', 'fx');
