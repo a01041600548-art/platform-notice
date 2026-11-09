@@ -460,7 +460,10 @@
   .nt-t { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
   .nt-t th, .nt-t td { padding: .55em .7em; border-bottom: 1px solid var(--line); text-align: left; font-size: .95em; }
   .nt-t th { font-size: .82em; font-weight: 800; color: var(--ink2); border-bottom: 2px solid var(--line); white-space: nowrap; }
-  .nt-t td:not(:first-child) { font-weight: 800; white-space: nowrap; }
+  .nt-t td:not(:first-child) { font-weight: 800; }
+  .nt-t td { white-space: nowrap; }
+  .nt-t td:last-child { white-space: normal; }
+  .nt-tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .nt-note { margin: 0; font-size: .9em; color: var(--ink2); line-height: 1.6; padding: .7em .85em; border-radius: 10px; background: color-mix(in srgb, var(--ink) 4%, var(--card)); }
   .nt-src { margin: 0; font-size: .8em; color: var(--ink2); }
   .nt-foot { padding-top: .3em; }
@@ -785,16 +788,19 @@
     (dt.facts || []).forEach((f) => {
       const row = el('div', 'nt-fact'); row.append(el('span', '', f[0]), el('b', '', f[1])); body.append(row);
     });
-    if (dt.table && dt.table.rows && dt.table.rows.length) {
-      if (dt.table.caption) body.append(el('div', 'nt-cap', dt.table.caption));
+    // 표는 여러 개일 수 있다(예: 신규·종료 표 + 번호 변경 표)
+    [dt.table, dt.table2].concat(dt.tables || []).forEach((tbl) => {
+      if (!tbl || !tbl.rows || !tbl.rows.length) return;
+      if (tbl.caption) body.append(el('div', 'nt-cap', tbl.caption));
       const t = el('table', 'nt-t');
       const thead = el('thead'); const htr = el('tr');
-      (dt.table.cols || []).forEach((c) => htr.append(el('th', '', c)));
+      (tbl.cols || []).forEach((c) => htr.append(el('th', '', c)));
       thead.append(htr); t.append(thead);
       const tb = el('tbody');
-      dt.table.rows.forEach((rw) => { const tr = el('tr'); rw.forEach((cell) => tr.append(el('td', '', String(cell)))); tb.append(tr); });
-      t.append(tb); body.append(t);
-    }
+      tbl.rows.forEach((rw) => { const tr = el('tr'); rw.forEach((cell) => tr.append(el('td', '', String(cell)))); tb.append(tr); });
+      t.append(tb);
+      const w = el('div', 'nt-tw'); w.append(t); body.append(w);
+    });
     if (dt.note) body.append(el('p', 'nt-note', dt.note));
     body.append(el('p', 'nt-src', '정리 근거: ' + (dt.source || '공지 원문') + (dt.readAt ? ' · 확인 ' + dt.readAt : '')));
     const a = goBtn(r.url, 'notice');
