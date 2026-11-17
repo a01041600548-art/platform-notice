@@ -344,36 +344,36 @@ def fetch_kctv():
 def fetch_kcta():
     """한국케이블TV방송협회 공지.
 
-    제목 칸이 <em class="iconNotice">공고</em> + <a>제목</a> 구조라, td 전체
-    텍스트를 쓰면 "공고2026 SO 콘텐츠..." 처럼 분류 라벨이 제목에 붙는다.
-    a 태그 텍스트만 제목으로 쓰고 em 은 라벨로 따로 뽑는다.
+    목록 화면(ArticleList.do)의 표는 자바스크립트가 나중에 채운다. requests 로
+    받은 HTML에는 머리글만 있고 글이 없어서 HTML 파싱으로는 0건이 나온다.
+    그래서 화면이 쓰는 JSON 엔드포인트를 그대로 호출한다(POST 폼 전송,
+    응답은 content-type 이 text/xml 이지만 내용은 JSON).
     """
-    list_url = ("https://kcta.or.kr/kcta_new/board/ArticleList.do?H_MENU_CD=100204"
-                "&L_MENU_CD=10020401&SITE_ID=KCTA&MENUON=Y&BOARD_ID=28")
-    r = req("GET", list_url)
-    soup = BeautifulSoup(r.text, "html.parser")
+    base = "https://kcta.or.kr"
+    api = base + "/kcta_new/board/getArticleList.do"
+    form = {"BOARD_ID": "28", "SITE_ID": "KCTA", "H_MENU_CD": "100204",
+            "L_MENU_CD": "10020401", "PAGE_INDEX": "1", "PAGE_SIZE": "15"}
+    r = req("POST", api, data=form)
+    try:
+        payload = json.loads(r.text)
+    except ValueError:
+        return []
     out = []
-    table = soup.select_one("table")
-    for tr in (table.select("tbody tr") if table else []):
-        a = tr.select_one("a[href]")
-        if not a:
+    for row in payload.get("ds_list") or []:
+        title = str(row.get("TITLE") or "").strip()
+        seq = str(row.get("ARTICLE_SEQ") or "").strip()
+        if not title or not seq:
             continue
-        title = a.get_text(" ", strip=True)
-        if not title:
-            continue
-        em = tr.select_one("em")
-        label = em.get_text(" ", strip=True) if em else ""
-        if label and label not in title:
-            title = "[%s] %s" % (label, title)
-        date = ""
-        for td in tr.select("td"):
-            m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", td.get_text())
-            if m:
-                date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
-                break
+        cat = str(row.get("CATEGORY_NAME") or "").strip()
+        if cat:
+            title = "[%s] %s" % (cat, title)
+        date = str(row.get("REG_DT") or "").strip()
+        if not re.fullmatch(r"20\d{2}-\d{2}-\d{2}", date):
+            m = re.match(r"(20\d{2})(\d{2})(\d{2})", str(row.get("REG_DTTM") or ""))
+            date = "%s-%s-%s" % m.groups() if m else ""
         if date:
             out.append({"title": title, "date": date,
-                        "url": urljoin(list_url, a.get("href") or "")})
+                        "url": "%s/kcta_new/board/ArticleView.do?BOARD_ID=28&ARTICLE_SEQ=%s" % (base, seq)})
     return out
 
 
