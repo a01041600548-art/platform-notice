@@ -20,6 +20,7 @@ import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -340,6 +341,72 @@ def fetch_kctv():
     return out
 
 
+def fetch_kcta():
+    """한국케이블TV방송협회 공지.
+
+    제목 칸이 <em class="iconNotice">공고</em> + <a>제목</a> 구조라, td 전체
+    텍스트를 쓰면 "공고2026 SO 콘텐츠..." 처럼 분류 라벨이 제목에 붙는다.
+    a 태그 텍스트만 제목으로 쓰고 em 은 라벨로 따로 뽑는다.
+    """
+    list_url = ("https://kcta.or.kr/kcta_new/board/ArticleList.do?H_MENU_CD=100204"
+                "&L_MENU_CD=10020401&SITE_ID=KCTA&MENUON=Y&BOARD_ID=28")
+    r = req("GET", list_url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    table = soup.select_one("table")
+    for tr in (table.select("tbody tr") if table else []):
+        a = tr.select_one("a[href]")
+        if not a:
+            continue
+        title = a.get_text(" ", strip=True)
+        if not title:
+            continue
+        em = tr.select_one("em")
+        label = em.get_text(" ", strip=True) if em else ""
+        if label and label not in title:
+            title = "[%s] %s" % (label, title)
+        date = ""
+        for td in tr.select("td"):
+            m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", td.get_text())
+            if m:
+                date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+                break
+        if date:
+            out.append({"title": title, "date": date,
+                        "url": urljoin(list_url, a.get("href") or "")})
+    return out
+
+
+def fetch_kiptv():
+    """한국IPTV방송협회 공지. 표 한 줄이 번호/제목/글쓴이/등록일/조회수,
+    상세 링크는 /notice/<번호> 형태의 평범한 href 다."""
+    list_url = "https://www.kiptv.or.kr/notice"
+    r = req("GET", list_url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    out = []
+    table = soup.select_one("table")
+    for tr in (table.select("tbody tr") if table else []):
+        a = tr.select_one("td.td_subject a[href]") or tr.select_one("a[href]")
+        if not a:
+            continue
+        title = a.get_text(" ", strip=True)
+        title = re.sub(r"\s*\+?\d+\s*$", "", title).strip()  # 댓글 수 꼬리 제거
+        if not title:
+            continue
+        date = ""
+        cell = tr.select_one("td.td_datetime")
+        texts = [cell.get_text()] if cell else [td.get_text() for td in tr.select("td")]
+        for txt in texts:
+            m = re.search(r"(20\d{2})[.\-](\d{2})[.\-](\d{2})", txt)
+            if m:
+                date = "%s-%s-%s" % (m.group(1), m.group(2), m.group(3))
+                break
+        if date:
+            out.append({"title": title, "date": date,
+                        "url": urljoin(list_url, a.get("href") or "")})
+    return out
+
+
 # (platform, group) 은 sites 배열의 표기와 정확히 일치해야 한다.
 SOURCES = {
     "skbb": ("SK브로드밴드", "IPTV", fetch_skbb),
@@ -350,6 +417,8 @@ SOURCES = {
     "gcs": ("푸른방송", "개별SO", fetch_gcs),
     "jcn": ("JCN울산중앙방송", "개별SO", fetch_jcn),
     "kctv": ("KCTV광주방송", "개별SO", fetch_kctv),
+    "kcta": ("한국케이블TV방송협회", "협회", fetch_kcta),
+    "kiptv": ("IPTV방송협회", "협회", fetch_kiptv),
 }
 
 # 출처 자체가 곧 주제 분류가 되는 경우(예: 방미통위는 기관 공지 전체가 '방미통위'

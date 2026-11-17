@@ -599,6 +599,7 @@
   <section class="pane" id="recent">
     <div class="tiles" id="tiles"></div>
     <section class="sec"><div><h2>주목할 공지</h2><span class="muted">수신료·채널평가·채널개편·채널 종료 중 최신</span></div><div class="hl" id="hl"></div></section>
+    <section class="sec"><div><h2>협회 공지</h2><span class="muted">협회별 최신 공지 · 올라오는 간격이 길어 기간 제한 없이 모읍니다</span></div><div class="sec" id="assoc"></div></section>
     <section class="search">
       <div class="sbar">
         <input class="input" id="q" type="search" placeholder="공지 검색 (예: 투니버스, 대가산정)" aria-label="검색어">
@@ -867,6 +868,24 @@
       c.append(m, t, el('div', 'muted', r.summary), el('div', 'chk', r.check), goBtn(r.url, 'notice'));
       return c;
     }));
+
+    // 협회는 공지가 드물게 올라와(KCTA는 몇 달에 한 번) '최근 1달' 창에 거의 걸리지 않는다.
+    // 그래서 기간과 무관하게 협회별 최신 몇 건을 따로 모아 보여준다.
+    (() => {
+      const box = $('assoc'); if (!box) return;
+      const names = D.sites.filter((s) => s.group === '협회').map((s) => s.platform);
+      box.replaceChildren(...names.map((nm) => {
+        const rows = D.notices.filter((r) => r.platform === nm).sort(byDate).slice(0, 5);
+        const site = D.sites.find((s) => s.platform === nm);
+        const b = el('div', 'block');
+        const h = el('div', 'block-h');
+        h.append(el('h2', '', nm), el('span', 'muted', rows.length ? '최신 ' + rows.length + '건 · ' + fmt(rows[0].date) + ' 기준' : '수집된 공지 없음'));
+        if (site) h.append(link(site.url, '게시판 열기'));
+        b.append(h);
+        b.append(...(rows.length ? rows.map((r) => nItem(r, true)) : [el('p', 'muted', '아직 수집된 공지가 없습니다.')]));
+        return b;
+      }));
+    })();
 
     const none = [];
     $('topics').replaceChildren(...TOPICS.map((t, i) => {
