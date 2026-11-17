@@ -429,22 +429,40 @@ DEFAULT_TOPIC = {
 }
 
 
-def notice_key(n):
-    """중복 판정 키.
+def title_norm(t):
+    """제목 비교용 정규화. 분류 라벨([공고] 등)과 공백 차이를 없앤다."""
+    t = re.sub(r"^\s*\[[^\]]{1,14}\]\s*", "", str(t or ""))
+    return re.sub(r"\s+", " ", t).strip()
 
-    사이트가 URL에 jsessionid 등을 끼워 넣거나(KMCC) 사람이 예전에 제목을
-    축약해서 적어둔 경우, 전체 URL/제목 문자열 비교로는 같은 글인데도 다른
-    글로 오인된다. 그래서 URL 안에 있는 "게시글 번호" 자체(boardSeq,
-    nt_keynum, idx 등 흔한 파라미터명)를 뽑아 그걸로 먼저 비교하고, 그게
-    없을 때만 (platform, title, date) 로 비교한다.
+
+def notice_keys(n):
+    """중복 판정 키 '후보들'. 하나라도 겹치면 같은 글로 본다.
+
+    예전에는 키를 하나만 돌려줬는데, 같은 글이라도 들어온 경로에 따라 URL이
+    다르다. 사람이 손으로 넣은 공지는 url 이 게시판 목록 주소이고 수집기가
+    넣는 공지는 글 상세 주소라, 키를 하나만 쓰면 같은 글이 두 번 쌓인다.
+    그래서 글번호·상세URL·(플랫폼+정규화 제목+날짜)를 모두 만들어 두고
+    교집합이 있으면 중복으로 친다. 글번호 파라미터명은 사이트마다 달라서
+    (ARTICLE_SEQ, nt_keynum, idx ...) 대소문자 구분 없이 찾고, 번호가 경로에
+    들어가는 형태(/notice/1234)도 함께 본다.
     """
+    keys = set()
+    plat = n.get("platform") or ""
     url = n.get("url") or ""
-    m = re.search(r"(?:boardSeq|nt_keynum|idx|bbs_seq|seq)=(\d+)", url)
+    m = re.search(r"(?:boardSeq|nt_keynum|idx|bbs_seq|article_seq|seq)=(\d+)", url, re.I)
     if m:
-        return ("seq", n["platform"] + "|" + m.group(1))
-    if url and not url.endswith(("list.do", "searchFlag=A")):
-        return ("url", n["platform"] + "|" + url)
-    return ("tpd", n["platform"] + "|" + n["title"] + "|" + n["date"])
+        keys.add(("seq", plat + "|" + m.group(1)))
+    m = re.search(r"/(?:notice|view|article)/(\d+)/?$", url, re.I)
+    if m:
+        keys.add(("seq", plat + "|" + m.group(1)))
+    # URL 문자열 자체는 키로 쓰지 않는다. 글 상세 주소를 못 구해 목록 주소를
+    # 그대로 넣어 둔 공지(LG헬로비전·HCN·SK브로드밴드 등)는 그 플랫폼 안에서
+    # URL이 전부 같아서, URL을 키로 쓰면 서로 다른 공지가 한 건으로 뭉개진다.
+    # 목록 주소에도 숫자가 들어 있어 "숫자가 있으면 상세 주소" 같은 어림짐작도
+    # 통하지 않는다. 그래서 위에서 뽑은 글번호와, 아래의 (플랫폼+제목+날짜)만
+    # 쓴다. 같은 글이면 둘 중 하나는 반드시 겹친다.
+    keys.add(("tpd", plat + "|" + title_norm(n.get("title")) + "|" + str(n.get("date") or "")))
+    return keys
 
 
 def main():
@@ -455,7 +473,9 @@ def main():
     data_path = sys.argv[2] if len(sys.argv) > 2 else "data.enc.json"
 
     data = decrypt(pw, data_path)
-    existing_keys = {notice_key(n) for n in data["notices"]}
+    existing_keys = set()
+    for n in data["notices"]:
+        existing_keys |= notice_keys(n)
 
     added_total = 0
     new_items = []
@@ -476,10 +496,10 @@ def main():
                     "check": "",
                     "url": it["url"],
                 }
-                k = notice_key(cand)
-                if k in existing_keys:
+                ks = notice_keys(cand)
+                if ks & existing_keys:
                     continue
-                existing_keys.add(k)
+                existing_keys |= ks
                 new_items.append(cand)
                 added += 1
             log(f"{platform}: 수집 {len(fresh)}건 (신규 {added}건)")
