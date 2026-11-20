@@ -15,7 +15,8 @@
     if (a >= 10000) return s + (a / 10000).toFixed(a >= 100000 ? 1 : 2).replace(/\.?0+$/, '') + '조';
     if (a >= 100) return s + Math.round(a).toLocaleString('ko-KR') + '억';
     if (a >= 1) return s + a.toFixed(1).replace(/\.0$/, '') + '억';
-    return s + Math.round(Math.abs(m)).toLocaleString('ko-KR') + '백만';
+    // 1억 미만은 '백만' 대신 '만'(만원)으로 표기 — 예: 34백만 → 3,400만
+    return s + (Math.round(Math.abs(m)) * 100).toLocaleString('ko-KR') + '만';
   };
   const pct = (a, b) => (b ? a / b * 100 : null);
   const chg = (cur, prev) => {
@@ -48,7 +49,7 @@
   .fx-h span { color: var(--fx-muted); font-size: .95em; }
   .fx-tablewrap { overflow-x: auto; background: var(--fx-card); border: 1.5px solid var(--fx-line); border-radius: 16px; }
   .fx-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 640px; }
-  .fx-table th { text-align: right; font-size: .85em; color: var(--fx-muted); font-weight: 800; padding: .8em .9em; border-bottom: 1.5px solid var(--fx-line); white-space: nowrap; background: var(--fx-card); }
+  .fx-table th { text-align: right; font-size: .85em; color: var(--fx-muted); font-weight: 800; padding: .8em .9em; border-bottom: 1.5px solid var(--fx-line); white-space: normal; word-break: keep-all; min-width: 4.5em; line-height: 1.35; background: var(--fx-card); }
   .fx-table th:first-child, .fx-table td:first-child { text-align: left; }
   .fx-table td { text-align: right; padding: .75em .9em; border-bottom: 1px solid var(--fx-line); white-space: nowrap; }
   .fx-table tr:last-child td { border-bottom: 0; }
@@ -305,7 +306,7 @@
     // 2) 매체별
     const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '매체별 수신료 대비 사용료'), el('span', '', '괄호 안은 전년 대비'));
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table'); const hr = el('tr');
-    ['매체', '수신료매출', '기본채널 수신료매출', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', 'PP 사용료÷수신료', '기본채널 사용료÷기본 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    ['매체', '수신료매출', '기본채널 수신료매출', 'PP 사용료(기본+유료)', 'VOD 사용료', '재송신비용', '수신료 대비 PP 사용료', '기본채널 수신료 대비 기본채널 사용료'].forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th); const tb = el('tbody');
     const cell = (a, b) => { const td = el('td', '', money(a)); const sm = el('small'); sm.append(chg(a, b)); td.append(sm); return td; };
     const rcell = (a, b) => { const td = el('td', '', a == null ? '—' : a.toFixed(1) + '%'); td.append(el('small', 'fx-k', b == null ? '' : '전년 ' + b.toFixed(1) + '% (' + (a - b >= 0 ? '+' : '') + (a - b).toFixed(1) + '%p)')); return td; };
@@ -373,7 +374,7 @@
     const h2 = el('div', 'fx-h'); h2.append(el('h2', '', '유료방송 플랫폼의 수신료와 PP 사용료'), el('span', '', 'PP 사용료 = 기본+유료채널 프로그램사용료 (VOD·지상파 재송신 제외)'));
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table');
     const hd = el('thead'); const hr = el('tr');
-    ['매체', '수신료매출', '홈쇼핑 송출수수료', 'PP 사용료(기본+유료)', '그중 기본채널', 'PP 사용료 ÷ 수신료'].forEach((x) => hr.append(el('th', '', x)));
+    ['매체', '수신료매출', '홈쇼핑 송출수수료', 'PP 사용료(기본+유료)', '그중 기본채널', '수신료 대비 PP 사용료'].forEach((x) => hr.append(el('th', '', x)));
     hd.append(hr); t.append(hd);
     const tb = el('tbody');
     const ratios = [];
@@ -544,7 +545,7 @@
     const plat = state.media && PLAT.includes(state.media);
     const tw = el('div', 'fx-tablewrap'); const t = el('table', 'fx-table');
     const hr = el('tr');
-    const cols = plat ? ['회사', '방송사업매출', '수신료매출', 'PP 사용료(기본+유료)', 'PP 사용료÷수신료', '영업손익'] : ['회사', '방송사업매출', state.media === 'PP' ? '프로그램제공매출' : '광고매출', '영업손익', '당기순손익', '규모'];
+    const cols = plat ? ['회사', '방송사업매출', '수신료매출', 'PP 사용료(기본+유료)', '수신료 대비 PP 사용료', '영업손익'] : ['회사', '방송사업매출', state.media === 'PP' ? '프로그램제공매출' : '광고매출', '영업손익', '당기순손익', '규모'];
     cols.forEach((x) => hr.append(el('th', '', x)));
     const th = el('thead'); th.append(hr); t.append(th);
     const tb = el('tbody');
