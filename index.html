@@ -134,6 +134,7 @@
   .go.list { border-color: var(--line); color: var(--ink2); font-weight: 700; }
   .go.list:hover { background: var(--ink2); color: var(--bg); border-color: var(--ink2); }
   .c-act { grid-area: act; }
+  .hcard .c-act, .c-act { display: flex; flex-wrap: wrap; gap: .5em; align-items: center; }
   #financeTab { --fx-bg: var(--bg); --fx-card: var(--card); --fx-ink: var(--ink); --fx-muted: var(--ink2); --fx-line: var(--line); --fx-up: var(--ok); --fx-down: var(--bad); --fx-accent: var(--c0); --fx-c2: var(--c2); }
   .foot { color: var(--ink2); font-size: .95em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1em; border-top: 1px solid var(--line); padding-top: 1.2em; }
 
@@ -464,11 +465,17 @@
   .nt-t td { white-space: nowrap; }
   .nt-t td:last-child { white-space: normal; }
   .nt-tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nt-info { border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .nt-info th { width: 7.5em; background: color-mix(in srgb, var(--ink) 5%, var(--card)); text-align: left; vertical-align: top; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: .86em; }
+  .nt-info td { white-space: normal !important; font-weight: 600 !important; line-height: 1.6; }
+  @media (max-width: 640px) { .nt-info th { width: 5.6em; white-space: normal; } }
+  .nt-info tr:last-child th, .nt-info tr:last-child td { border-bottom: 0; }
   .nt-note { margin: 0; font-size: .9em; color: var(--ink2); line-height: 1.6; padding: .7em .85em; border-radius: 10px; background: color-mix(in srgb, var(--ink) 4%, var(--card)); }
   .nt-src { margin: 0; font-size: .8em; color: var(--ink2); }
   .nt-foot { padding-top: .3em; }
   .c-openable { cursor: pointer; }
   .c-openable:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .go.detail.sm { min-height: 32px; padding: 0 .7em; font-size: .85em; }
   .go.detail { border-color: var(--c0); color: var(--c0); font: inherit; font-weight: 700; cursor: pointer; background: color-mix(in srgb, var(--c0) 8%, var(--card)); }
   @media (max-width: 640px) { dialog.nt-dialog { width: 100vw; max-width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; margin: auto auto 0; } }
 
@@ -753,15 +760,15 @@
     const p = el('div', 'c-plat'); if (fields.group) p.append(el('span', 'grp', fields.group)); p.append(fields.plat);
     const t = el('div', 'c-title', r.title);
     const act = el('div', 'c-act');
-    // 공지 본문을 읽어 정리해 둔 게 있으면 제목을 눌러 팝업으로 본다
-    if (fields.kind === 'notice' && r.detail) {
+    // 모든 공지는 제목을 누르면 표로 정리한 팝업이 열린다(본문 판독 정리가 있으면 표가 더 붙는다)
+    if (fields.kind === 'notice') {
       t.classList.add('c-openable');
       t.tabIndex = 0; t.setAttribute('role', 'button');
-      t.title = '내용 정리 보기';
+      t.title = '표로 정리해 보기';
       const open = () => openNotice(r);
       t.addEventListener('click', open);
       t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-      const b = el('button', 'go detail', '내용 정리 보기'); b.type = 'button'; b.addEventListener('click', open);
+      const b = el('button', 'go detail', r.detail ? '📋 내용 정리 보기' : '📋 표로 보기'); b.type = 'button'; b.addEventListener('click', open);
       act.append(b);
     }
     act.append(goBtn(r.url, fields.kind));
@@ -787,6 +794,17 @@
     const x = el('button', 'nt-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '닫기');
     x.addEventListener('click', () => dlg.close()); head.append(x);
     const body = el('div', 'nt-body');
+    // 공지 기본 정리표 — 본문 판독 정리가 없는 공지도 같은 틀로 본다
+    const info = [
+      ['사업자', [r.group, r.platform].filter(Boolean).join(' · ')],
+      ['게시일', fmt(r.date) + (r.date ? ' (' + r.date + ')' : '')],
+      ['주제', r.topic || '—'],
+      ['핵심 내용', r.summary || '아직 요약 전입니다. 아래 원문 보기로 확인해 주세요.'],
+      ['영업 확인 포인트', r.check || '—'],
+    ];
+    const it = el('table', 'nt-t nt-info'); const itb = el('tbody');
+    info.forEach(([k, v]) => { const tr = el('tr'); tr.append(el('th', '', k), el('td', '', v)); itb.append(tr); });
+    it.append(itb); const iw = el('div', 'nt-tw'); iw.append(it); body.append(iw);
     if (dt.intro) body.append(el('p', 'nt-intro', dt.intro));
     (dt.facts || []).forEach((f) => {
       const row = el('div', 'nt-fact'); row.append(el('span', '', f[0]), el('b', '', f[1])); body.append(row);
@@ -805,7 +823,7 @@
       const w = el('div', 'nt-tw'); w.append(t); body.append(w);
     });
     if (dt.note) body.append(el('p', 'nt-note', dt.note));
-    body.append(el('p', 'nt-src', '정리 근거: ' + (dt.source || '공지 원문') + (dt.readAt ? ' · 확인 ' + dt.readAt : '')));
+    body.append(el('p', 'nt-src', r.detail ? ('정리 근거: ' + (dt.source || '공지 원문') + (dt.readAt ? ' · 확인 ' + dt.readAt : '')) : '정리 근거: 공지 제목·요약 (본문 표 판독 전)'));
     const a = goBtn(r.url, 'notice');
     if (a.nodeName === 'A') { const f = el('div', 'nt-foot'); f.append(a); body.append(f); }
     dlg.append(head, body);
@@ -867,7 +885,11 @@
       const c = el('article', 'hcard'); c.style.borderTopColor = tcol(r.topic);
       const m = el('div', 'meta'); m.append(badge(r.topic, tcol(r.topic)), r.platform + ' · ' + fmt(r.date));
       const t = el('div', 'htitle', r.title);
-      c.append(m, t, el('div', 'muted', r.summary), el('div', 'chk', r.check), goBtn(r.url, 'notice'));
+      t.classList.add('c-openable'); t.tabIndex = 0; t.setAttribute('role', 'button'); t.addEventListener('click', () => openNotice(r));
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNotice(r); } });
+      const ob = el('button', 'go detail', r.detail ? '📋 내용 정리 보기' : '📋 표로 보기'); ob.type = 'button'; ob.addEventListener('click', () => openNotice(r));
+      const ac = el('div', 'c-act'); ac.append(ob, goBtn(r.url, 'notice'));
+      c.append(m, t, el('div', 'muted', r.summary), el('div', 'chk', r.check), ac);
       return c;
     }));
 
@@ -896,7 +918,10 @@
       const b = el('div', 'block'); b.id = 't-' + i;
       const h = el('div', 'block-h'); const d = el('i', 'dot'); d.style.background = tcol(t);
       h.append(d, el('h2', '', t), el('span', 'muted', rows.length + '건'));
-      b.append(h, ...rows.map((r) => nItem(r, false)));
+      // 주제마다 최근 4건만 펼치고 나머지는 접어 둔다 — 첫 화면이 지나치게 길어지지 않게
+      const SHOW = 4;
+      b.append(h, ...rows.slice(0, SHOW).map((r) => nItem(r, false)));
+      if (rows.length > SHOW) { const det = el('details', 'more'); det.append(el('summary', '', '나머지 ' + (rows.length - SHOW) + '건 더 보기')); rows.slice(SHOW).forEach((r) => det.append(nItem(r, false))); b.append(det); }
       return b;
     }));
     $('empties').textContent = none.length ? '최근 1달 공지 없음: ' + none.join(', ') + ' (월간 누적·검색에서 지난 공지 확인)' : '';
@@ -913,7 +938,7 @@
       const pts = D.monthly.filter((r) => r.month === mo).sort((a, b) => TOPICS.indexOf(a.topic) - TOPICS.indexOf(b.topic));
       if (pts.length) { const ul = el('ul', 'points'); pts.forEach((p) => { const li = el('li'); const bw = el('div'); bw.append(badge(p.topic, tcol(p.topic))); const body = el('div'); body.append(p.point, el('span', 'who', p.platforms)); li.append(bw, body); ul.append(li); }); card.append(ul); }
       else card.append(el('span', 'muted', '이 달의 핵심 포인트가 아직 정리되지 않았습니다.'));
-      if (list.length) { const det = el('details', 'more'); det.append(el('summary', '', '이 달 공지 ' + list.length + '건 전체 보기')); const ul = el('ul', 'mlist'); list.forEach((r) => { const li = el('li'); li.append(el('span', 'muted', fmt(r.date)), badge(r.topic, tcol(r.topic)), el('b', '', r.platform), link(r.url, r.title)); ul.append(li); }); det.append(ul); card.append(det); }
+      if (list.length) { const det = el('details', 'more'); det.append(el('summary', '', '이 달 공지 ' + list.length + '건 전체 보기')); const ul = el('ul', 'mlist'); list.forEach((r) => { const li = el('li'); const ob = el('button', 'go detail sm', '📋 보기'); ob.type = 'button'; ob.addEventListener('click', () => openNotice(r)); li.append(el('span', 'muted', fmt(r.date)), badge(r.topic, tcol(r.topic)), el('b', '', r.platform), link(r.url, r.title), ob); ul.append(li); }); det.append(ul); card.append(det); }
       w.append(lab, card); return w;
     }));
 

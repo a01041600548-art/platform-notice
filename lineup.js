@@ -203,11 +203,13 @@
   .lu-stat .dot { width: .6em; height: .6em; border-radius: 50%; display: inline-block; flex: none; }
   .lu-stat .d-vp { background: #15803d; } .lu-stat .d-vc { background: var(--warn, #a16207); } .lu-stat .d-ef { background: var(--bad, #c2410c); } .lu-stat .d-ff { background: #6b7280; }
   .lu-stat .cap { font-size: .72em; color: var(--lu-muted); font-weight: 600; }
+  .lu-hid { color: var(--lu-muted); font-size: .9em; font-weight: 600; }
   .lu-stat-cap { grid-column: 1 / -1; margin: 0 0 .1em; font-size: .83em; color: var(--lu-muted); font-weight: 600; line-height: 1.5; }
 
   /* ---- 도구막대 2행 + 칩 ---- */
   .lu-tool2 { display: flex; flex-wrap: wrap; gap: .6em 1em; align-items: flex-start; }
   .lu-fld { display: flex; flex-direction: column; gap: .3em; min-width: 9em; flex: 1 1 11em; }
+  .lu-fld-wide { flex: 2 1 22em; }
   .lu-fld > span { font-size: .78em; font-weight: 800; color: var(--lu-muted); }
   .lu-chips { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; padding-top: .2em; }
   .lu-chip { display: inline-flex; align-items: center; gap: .35em; font-size: .82em; font-weight: 700; padding: .3em .35em .3em .8em; border-radius: 999px; background: color-mix(in srgb, var(--lu-accent) 12%, var(--lu-card)); color: var(--lu-accent); border: 1px solid color-mix(in srgb, var(--lu-accent) 35%, transparent); }
@@ -278,7 +280,9 @@
     const g = []; const map = {};
     D.plats.forEach((p, i) => { const k = p.op + '|' + tlabel(p); if (!map[k]) { map[k] = { key: k, op: p.op, p, type: tlabel(p), kind: p.kind, idx: [] }; g.push(map[k]); } map[k].idx.push(i); });
     const order = { 'IPTV': 0, '위성': 1, '디지털': 2, '8VSB': 3, 'IP': 4 };
-    return g.sort((a, b) => order[a.type] - order[b.type] || a.op.localeCompare(b.op, 'ko'));
+    // 열 순서: 사업자 구분(IPTV → MSO → 개별SO → 위성) → 상품 유형 → 사업자명
+    const pgo = (x) => GORDER_PG.indexOf(platGroup(x.p));
+    return g.sort((a, b) => pgo(a) - pgo(b) || order[a.type] - order[b.type] || a.op.localeCompare(b.op, 'ko'));
   }
   const pick = (D, gr, state) => { if (gr.idx.length === 1) return gr.idx[0]; const r = state.reg[gr.op]; const f = gr.idx.find((i) => D.plats[i].region === r); return f != null ? f : gr.idx[0]; };
 
@@ -668,7 +672,8 @@
     const box = el('div', 'lu');
     const G = groupsOf(D);
     const cols0 = G.filter((g) => (!state.k || g.type === state.k) && (!state.pg || platGroup(g.p) === state.pg));
-    if (!state.cols) state.cols = cols0.slice(0, 5).map((g) => g.key);
+    // 기본 비교 열: 사업자마다 한 열씩(디지털 우선) — 구분을 고르면 그 구분의 모든 사업자가 빠짐없이 나온다
+    if (!state.cols) { const seen = new Set(); state.cols = cols0.filter((g) => { const k = platGroup(g.p) + '|' + g.op; if (seen.has(k)) return false; seen.add(k); return true; }).map((g) => g.key); }
     const cols1 = state.allCols ? cols0 : cols0.filter((g) => (state.cols || []).includes(g.key));
     const cols = (cols1.length ? cols1 : cols0.slice(0, 5)).map((g) => ({ g, i: pick(D, g, state) }));
     const colOps = new Set(cols.map(({ g }) => g.op));
@@ -700,7 +705,7 @@
     // 도구막대 2행 — 방식 · 지역 · 상품 · 검증상태
     const r2 = el('div', 'lu-tool2');
     // 사업자 구분(IPTV·MSO·개별SO·위성)과 케이블 상품 유형(디지털·8VSB·IP)을 축으로 나눈다
-    const fGrp = el('div', 'lu-fld'); fGrp.append(el('span', '', '사업자 구분'));
+    const fGrp = el('div', 'lu-fld lu-fld-wide'); fGrp.append(el('span', '', '사업자 구분'));
     const gt = el('div', 'lu-type');
     [['', '전체'], ...GORDER_PG.map((g) => [g, g])].forEach(([k, l]) => {
       const n = k ? new Set(D.plats.filter((p) => platGroup(p) === k).map((p) => p.op)).size : 0;
@@ -713,7 +718,8 @@
     const tt = el('div', 'lu-type');
     [['', '전체'], ['디지털', '디지털'], ['8VSB', '8VSB'], ['IP', 'IP']].forEach(([k, l]) => { const b = el('button', '', l); b.type = 'button'; b.style.setProperty('--tc', TC[k] || '#334155'); b.setAttribute('aria-pressed', String(state.k === k)); b.addEventListener('click', () => { state.k = k; state.cols = null; rerender(); }); tt.append(b); });
     fType.append(tt); r2.append(fType);
-    const fReg = el('div', 'lu-fld'); fReg.append(el('span', '', '지역')); fReg.append(regionPickers(D, G, state, rerender, colOps)); r2.append(fReg);
+    const regBox = regionPickers(D, G, state, rerender, colOps);
+    if (regBox.childNodes.length) { const fReg = el('div', 'lu-fld lu-fld-wide'); fReg.append(el('span', '', '방송구역')); fReg.append(regBox); r2.append(fReg); } // 고를 구역이 없으면 칸을 숨긴다
     const fProd = el('div', 'lu-fld'); fProd.append(el('span', '', '상품'));
     const pSel = el('select', 'lu-in'); pSel.setAttribute('aria-label', '상품 단계 필터');
     [['', '전체'], ['known', '상품 단계 확인된 값만'], ['unk', '상품 미확인만']].forEach(([k, l]) => pSel.append(new Option(l, k)));
@@ -766,13 +772,17 @@
 
     function updateBody() {
       bodyBox.replaceChildren();
-      const rows = D.chans.filter(matchesFilters);
+      // 비교 중인 열 어디에도 번호가 없는 채널은 빈 줄만 이어져 표가 비어 보이므로 숨긴다(검색할 때는 '미편성' 확인용으로 보여 준다)
+      const rows0 = D.chans.filter(matchesFilters);
+      const rows = state.q ? rows0 : rows0.filter((c) => cols.some(({ i }) => c.c[i]));
+      const hiddenN = rows0.length - rows.length;
+      const gix = (g) => { const k = GORDER.indexOf(g); return k < 0 ? 999 : k; }; // 장르 미지정은 맨 뒤로
       if (state.s === 'n') rows.sort((a, b) => a.n.localeCompare(b.n, 'ko'));
       else if (state.s === 'cnt') rows.sort((a, b) => cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
       else if (state.s[0] === 'p') { const pi = +state.s.slice(1); rows.sort((a, b) => numv(a.c[pi]) - numv(b.c[pi])); }
-      else rows.sort((a, b) => GORDER.indexOf(a.g) - GORDER.indexOf(b.g) || cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
+      else rows.sort((a, b) => gix(a.g) - gix(b.g) || cols.filter(({ i }) => b.c[i]).length - cols.filter(({ i }) => a.c[i]).length || a.n.localeCompare(b.n, 'ko'));
 
-      topbar.querySelector('.scope').replaceChildren('선택 범위 ', el('b', '', String(rows.length) + '개'), ' / 전체 등록 ', el('b', '', String(D.chans.length) + '개'), ' · 비교 ', el('b', '', String(cols.length) + '개 라인업'));
+      topbar.querySelector('.scope').replaceChildren('선택 범위 ', el('b', '', String(rows.length) + '개'), ' / 전체 등록 ', el('b', '', String(D.chans.length) + '개'), ' · 비교 ', el('b', '', String(cols.length) + '개 라인업'), hiddenN ? el('span', 'lu-hid', ' · 비교 열에 번호 없는 ' + hiddenN + '개 숨김') : '');
 
       if (!rows.length) {
         const empty = el('div', 'lu-card'); const p1 = el('p', 'lu-note', state.q || state.g || state.pf || state.vf ? '현재 선택 결과 없음 — 검색어·필터 조건을 확인하세요.' : '현재 조건에 맞는 채널이 없습니다.');
